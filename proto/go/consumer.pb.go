@@ -144,7 +144,7 @@ const file_consumer_proto_rawDesc = "" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
 	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag2N\n" +
 	"\x0fFutureQConsumer\x12;\n" +
-	"\tSubscribe\x12\x13.futureq.AckRequest\x1a\x15.futureq.QueueMessage(\x010\x01B(Z&github.com/futureq-io/protocol/proto/gob\x06proto3"
+	"\tSubscribe\x12\x13.futureq.AckRequest\x1a\x15.futureq.QueueMessage(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
 	file_consumer_proto_rawDescOnce sync.Once
