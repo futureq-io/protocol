@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package futureq;
 
-option go_package = "github.com/futureq-io/futureq/protocol/proto/go";
+option go_package = "github.com/futureq-io/protocol/proto/go";
 
 message StreamPublishRequest {
     string topic = 2;

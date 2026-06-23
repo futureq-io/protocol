@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package futureq;
 
-option go_package = "github.com/futureq-io/futureq/protocol/proto/go";
+option go_package = "github.com/futureq-io/protocol/proto/go";
 
 // QueueMessage is pushed from the server to the consumer on the Subscribe stream.
 // delivery_tag is an opaque server-assigned token (the raw Pebble key) that the
