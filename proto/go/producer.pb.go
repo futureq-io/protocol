@@ -146,7 +146,7 @@ const file_producer_proto_rawDesc = "" +
 	"\asuccess\x18\x02 \x01(\bR\asuccess\x12#\n" +
 	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage2`\n" +
 	"\x0fFutureQProducer\x12M\n" +
-	"\rPublishStream\x12\x1d.futureq.StreamPublishRequest\x1a\x19.futureq.StreamPublishAck(\x010\x01B(Z&github.com/futureq-io/futureq/proto/gob\x06proto3"
+	"\rPublishStream\x12\x1d.futureq.StreamPublishRequest\x1a\x19.futureq.StreamPublishAck(\x010\x01B(Z&github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
 	file_producer_proto_rawDescOnce sync.Once
