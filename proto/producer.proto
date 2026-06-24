@@ -56,10 +56,6 @@ message MessageAck {
 
     // error_message contains a human-readable description if success is false.
     string error_message = 2;
-
-    // message_id is a server-assigned opaque identifier for this message.
-    // It matches the delivery_tag that consumers will receive.
-    bytes  message_id    = 3;
 }
 
 // PublishBatchAck is the broker's response to a PublishBatch frame.

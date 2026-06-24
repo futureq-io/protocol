@@ -217,10 +217,7 @@ type MessageAck struct {
 	// success is true if the message was persisted successfully.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	// error_message contains a human-readable description if success is false.
-	ErrorMessage string `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	// message_id is a server-assigned opaque identifier for this message.
-	// It matches the delivery_tag that consumers will receive.
-	MessageId     []byte `protobuf:"bytes,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	ErrorMessage  string `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -267,13 +264,6 @@ func (x *MessageAck) GetErrorMessage() string {
 		return x.ErrorMessage
 	}
 	return ""
-}
-
-func (x *MessageAck) GetMessageId() []byte {
-	if x != nil {
-		return x.MessageId
-	}
-	return nil
 }
 
 // PublishBatchAck is the broker's response to a PublishBatch frame.
@@ -334,13 +324,11 @@ const file_producer_proto_rawDesc = "" +
 	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\"s\n" +
 	"\fPublishBatch\x123\n" +
 	"\bmessages\x18\x01 \x03(\v2\x17.futureq.PublishMessageR\bmessages\x12.\n" +
-	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"j\n" +
+	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"K\n" +
 	"\n" +
 	"MessageAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12\x1d\n" +
-	"\n" +
-	"message_id\x18\x03 \x01(\fR\tmessageId\":\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\":\n" +
 	"\x0fPublishBatchAck\x12'\n" +
 	"\x04acks\x18\x01 \x03(\v2\x13.futureq.MessageAckR\x04acks*Q\n" +
 	"\bAckLevel\x12\x19\n" +
