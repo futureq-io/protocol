@@ -26,7 +26,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FutureQProducerClient interface {
-	PublishStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamPublishRequest, StreamPublishAck], error)
+	// PublishStream is a bidirectional streaming RPC. The client pushes
+	// PublishBatch frames and the broker responds with one PublishBatchAck per
+	// batch. The stream stays alive for the duration of the connection,
+	// allowing high-throughput producers to pipeline multiple batches.
+	PublishStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PublishBatch, PublishBatchAck], error)
 }
 
 type futureQProducerClient struct {
@@ -37,24 +41,28 @@ func NewFutureQProducerClient(cc grpc.ClientConnInterface) FutureQProducerClient
 	return &futureQProducerClient{cc}
 }
 
-func (c *futureQProducerClient) PublishStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[StreamPublishRequest, StreamPublishAck], error) {
+func (c *futureQProducerClient) PublishStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PublishBatch, PublishBatchAck], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &FutureQProducer_ServiceDesc.Streams[0], FutureQProducer_PublishStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[StreamPublishRequest, StreamPublishAck]{ClientStream: stream}
+	x := &grpc.GenericClientStream[PublishBatch, PublishBatchAck]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FutureQProducer_PublishStreamClient = grpc.BidiStreamingClient[StreamPublishRequest, StreamPublishAck]
+type FutureQProducer_PublishStreamClient = grpc.BidiStreamingClient[PublishBatch, PublishBatchAck]
 
 // FutureQProducerServer is the server API for FutureQProducer service.
 // All implementations must embed UnimplementedFutureQProducerServer
 // for forward compatibility.
 type FutureQProducerServer interface {
-	PublishStream(grpc.BidiStreamingServer[StreamPublishRequest, StreamPublishAck]) error
+	// PublishStream is a bidirectional streaming RPC. The client pushes
+	// PublishBatch frames and the broker responds with one PublishBatchAck per
+	// batch. The stream stays alive for the duration of the connection,
+	// allowing high-throughput producers to pipeline multiple batches.
+	PublishStream(grpc.BidiStreamingServer[PublishBatch, PublishBatchAck]) error
 	mustEmbedUnimplementedFutureQProducerServer()
 }
 
@@ -65,7 +73,7 @@ type FutureQProducerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFutureQProducerServer struct{}
 
-func (UnimplementedFutureQProducerServer) PublishStream(grpc.BidiStreamingServer[StreamPublishRequest, StreamPublishAck]) error {
+func (UnimplementedFutureQProducerServer) PublishStream(grpc.BidiStreamingServer[PublishBatch, PublishBatchAck]) error {
 	return status.Error(codes.Unimplemented, "method PublishStream not implemented")
 }
 func (UnimplementedFutureQProducerServer) mustEmbedUnimplementedFutureQProducerServer() {}
@@ -90,11 +98,11 @@ func RegisterFutureQProducerServer(s grpc.ServiceRegistrar, srv FutureQProducerS
 }
 
 func _FutureQProducer_PublishStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FutureQProducerServer).PublishStream(&grpc.GenericServerStream[StreamPublishRequest, StreamPublishAck]{ServerStream: stream})
+	return srv.(FutureQProducerServer).PublishStream(&grpc.GenericServerStream[PublishBatch, PublishBatchAck]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FutureQProducer_PublishStreamServer = grpc.BidiStreamingServer[StreamPublishRequest, StreamPublishAck]
+type FutureQProducer_PublishStreamServer = grpc.BidiStreamingServer[PublishBatch, PublishBatchAck]
 
 // FutureQProducer_ServiceDesc is the grpc.ServiceDesc for FutureQProducer service.
 // It's only intended for direct use with grpc.RegisterService,

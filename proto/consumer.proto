@@ -4,22 +4,69 @@ package futureq;
 
 option go_package = "github.com/futureq-io/protocol/proto/go";
 
-// QueueMessage is pushed from the server to the consumer on the Subscribe stream.
-// delivery_tag is an opaque server-assigned token (the raw Pebble key) that the
-// client must echo back in AckRequest.delivery_tag to acknowledge this message.
-message QueueMessage {
-    bytes payload = 2;
-    bytes delivery_tag = 3;
+// SubscribeInit is the first frame that a consumer must send on the Subscribe
+// stream. It declares the topic and consumer group for this connection.
+message SubscribeInit {
+    // topic is the name of the channel to subscribe to.
+    string topic    = 1;
+
+    // group_id identifies the consumer group. Consumers sharing the same
+    // group_id compete for messages (one delivery per group). Different
+    // group_ids on the same topic each receive an independent copy of every
+    // message (fan-out).
+    string group_id = 2;
+
+    // read_from_replica is reserved for a future follower-read feature.
+    // Setting this field has no effect in the current implementation.
+    bool   read_from_replica = 3;
 }
 
-// AckRequest is sent by the consumer back to the server to acknowledge a message.
-// Set success=true and echo the delivery_tag from the corresponding QueueMessage
-// to confirm delivery. Set success=false to NACK (the message will be redelivered).
+// AckRequest is sent by the consumer to acknowledge or reject a message.
 message AckRequest {
-    bool success = 2;
-    bytes delivery_tag = 3;
+    // success=true: message was processed; the broker will delete it.
+    // success=false: message was rejected (NACK); the broker will re-dispatch
+    //   it to another consumer on the next dispatcher tick.
+    bool  success      = 1;
+
+    // delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
+    bytes delivery_tag = 2;
+}
+
+// ConsumerFrame is the union type sent by the consumer on the Subscribe stream.
+// The very first frame must carry a SubscribeInit. All subsequent frames must
+// carry AckRequest.
+message ConsumerFrame {
+    oneof body {
+        SubscribeInit init = 1;
+        AckRequest    ack  = 2;
+    }
+}
+
+// QueueMessage is pushed by the broker to the consumer when a message becomes
+// eligible for delivery (its delay has elapsed).
+message QueueMessage {
+    // topic is the channel this message was published on.
+    string topic        = 1;
+
+    // payload is the application data originally sent by the producer.
+    bytes  payload      = 2;
+
+    // delivery_tag is an opaque server-assigned identifier (the raw Pebble
+    // key). The consumer must echo this in AckRequest.delivery_tag.
+    bytes  delivery_tag = 3;
+
+    // enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the
+    // message was first received. Useful for computing actual delivery latency.
+    int64  enqueued_at_unix_ms = 4;
+
+    // delay_ms is the original delay requested by the producer.
+    int64  delay_ms = 5;
 }
 
 service FutureQConsumer {
-    rpc Subscribe(stream AckRequest) returns (stream QueueMessage);
+    // Subscribe is a bidirectional streaming RPC. The client sends a
+    // ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
+    // AckRequest). The server pushes QueueMessage frames whenever messages
+    // become ready for the subscribed topic and group.
+    rpc Subscribe(stream ConsumerFrame) returns (stream QueueMessage);
 }

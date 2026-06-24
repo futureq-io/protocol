@@ -21,29 +21,96 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type StreamPublishRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Topic           string                 `protobuf:"bytes,2,opt,name=topic,proto3" json:"topic,omitempty"`
-	Payload         []byte                 `protobuf:"bytes,3,opt,name=payload,proto3" json:"payload,omitempty"`
-	ExecuteAtUnixMs int64                  `protobuf:"varint,4,opt,name=execute_at_unix_ms,json=executeAtUnixMs,proto3" json:"execute_at_unix_ms,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+// AckLevel controls how durable a batch publish must be before the broker
+// acknowledges it.
+type AckLevel int32
+
+const (
+	AckLevel_ACK_LEVEL_UNSPECIFIED AckLevel = 0
+	// ACK_LEVEL_LEADER: the leader has written the batch to its local Pebble
+	// and returns immediately. Followers replicate asynchronously.
+	// Risk: data loss if the leader crashes before replication completes.
+	AckLevel_ACK_LEVEL_LEADER AckLevel = 1
+	// ACK_LEVEL_QUORUM: a majority of replicas have committed the Raft log
+	// entry before the broker acknowledges. This is the recommended default
+	// for production use.
+	AckLevel_ACK_LEVEL_QUORUM AckLevel = 2
+)
+
+// Enum value maps for AckLevel.
+var (
+	AckLevel_name = map[int32]string{
+		0: "ACK_LEVEL_UNSPECIFIED",
+		1: "ACK_LEVEL_LEADER",
+		2: "ACK_LEVEL_QUORUM",
+	}
+	AckLevel_value = map[string]int32{
+		"ACK_LEVEL_UNSPECIFIED": 0,
+		"ACK_LEVEL_LEADER":      1,
+		"ACK_LEVEL_QUORUM":      2,
+	}
+)
+
+func (x AckLevel) Enum() *AckLevel {
+	p := new(AckLevel)
+	*p = x
+	return p
 }
 
-func (x *StreamPublishRequest) Reset() {
-	*x = StreamPublishRequest{}
+func (x AckLevel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AckLevel) Descriptor() protoreflect.EnumDescriptor {
+	return file_producer_proto_enumTypes[0].Descriptor()
+}
+
+func (AckLevel) Type() protoreflect.EnumType {
+	return &file_producer_proto_enumTypes[0]
+}
+
+func (x AckLevel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AckLevel.Descriptor instead.
+func (AckLevel) EnumDescriptor() ([]byte, []int) {
+	return file_producer_proto_rawDescGZIP(), []int{0}
+}
+
+// PublishMessage is a single scheduled message inside a PublishBatch.
+type PublishMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// topic identifies the logical channel for this message.
+	Topic string `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	// payload is the opaque application data to deliver to consumers.
+	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	// delay_ms is the number of milliseconds from the broker's receive time
+	// before this message becomes eligible for delivery. Must be >= 0.
+	// A value of 0 means "deliver on the next dispatcher tick".
+	DelayMs int64 `protobuf:"varint,3,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
+	// ttl_ms is the message time-to-live in milliseconds, measured from the
+	// broker's receive time. If the message has not been consumed within
+	// ttl_ms milliseconds it will be lazily discarded. 0 means no expiry.
+	TtlMs         int64 `protobuf:"varint,4,opt,name=ttl_ms,json=ttlMs,proto3" json:"ttl_ms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PublishMessage) Reset() {
+	*x = PublishMessage{}
 	mi := &file_producer_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *StreamPublishRequest) String() string {
+func (x *PublishMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StreamPublishRequest) ProtoMessage() {}
+func (*PublishMessage) ProtoMessage() {}
 
-func (x *StreamPublishRequest) ProtoReflect() protoreflect.Message {
+func (x *PublishMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_producer_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,54 +122,65 @@ func (x *StreamPublishRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StreamPublishRequest.ProtoReflect.Descriptor instead.
-func (*StreamPublishRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use PublishMessage.ProtoReflect.Descriptor instead.
+func (*PublishMessage) Descriptor() ([]byte, []int) {
 	return file_producer_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *StreamPublishRequest) GetTopic() string {
+func (x *PublishMessage) GetTopic() string {
 	if x != nil {
 		return x.Topic
 	}
 	return ""
 }
 
-func (x *StreamPublishRequest) GetPayload() []byte {
+func (x *PublishMessage) GetPayload() []byte {
 	if x != nil {
 		return x.Payload
 	}
 	return nil
 }
 
-func (x *StreamPublishRequest) GetExecuteAtUnixMs() int64 {
+func (x *PublishMessage) GetDelayMs() int64 {
 	if x != nil {
-		return x.ExecuteAtUnixMs
+		return x.DelayMs
 	}
 	return 0
 }
 
-type StreamPublishAck struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,3,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+func (x *PublishMessage) GetTtlMs() int64 {
+	if x != nil {
+		return x.TtlMs
+	}
+	return 0
+}
+
+// PublishBatch is a single frame sent by the producer on the PublishStream.
+// All messages in the batch are written atomically as a single Raft log entry.
+type PublishBatch struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	Messages []*PublishMessage      `protobuf:"bytes,1,rep,name=messages,proto3" json:"messages,omitempty"`
+	// ack_level controls when the broker acknowledges this batch.
+	// Defaults to ACK_LEVEL_QUORUM when unspecified.
+	AckLevel      AckLevel `protobuf:"varint,2,opt,name=ack_level,json=ackLevel,proto3,enum=futureq.AckLevel" json:"ack_level,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *StreamPublishAck) Reset() {
-	*x = StreamPublishAck{}
+func (x *PublishBatch) Reset() {
+	*x = PublishBatch{}
 	mi := &file_producer_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *StreamPublishAck) String() string {
+func (x *PublishBatch) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StreamPublishAck) ProtoMessage() {}
+func (*PublishBatch) ProtoMessage() {}
 
-func (x *StreamPublishAck) ProtoReflect() protoreflect.Message {
+func (x *PublishBatch) ProtoReflect() protoreflect.Message {
 	mi := &file_producer_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -114,39 +192,163 @@ func (x *StreamPublishAck) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StreamPublishAck.ProtoReflect.Descriptor instead.
-func (*StreamPublishAck) Descriptor() ([]byte, []int) {
+// Deprecated: Use PublishBatch.ProtoReflect.Descriptor instead.
+func (*PublishBatch) Descriptor() ([]byte, []int) {
 	return file_producer_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *StreamPublishAck) GetSuccess() bool {
+func (x *PublishBatch) GetMessages() []*PublishMessage {
+	if x != nil {
+		return x.Messages
+	}
+	return nil
+}
+
+func (x *PublishBatch) GetAckLevel() AckLevel {
+	if x != nil {
+		return x.AckLevel
+	}
+	return AckLevel_ACK_LEVEL_UNSPECIFIED
+}
+
+// MessageAck is the per-message result inside a PublishBatchAck.
+type MessageAck struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success is true if the message was persisted successfully.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// error_message contains a human-readable description if success is false.
+	ErrorMessage string `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	// message_id is a server-assigned opaque identifier for this message.
+	// It matches the delivery_tag that consumers will receive.
+	MessageId     []byte `protobuf:"bytes,3,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MessageAck) Reset() {
+	*x = MessageAck{}
+	mi := &file_producer_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MessageAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MessageAck) ProtoMessage() {}
+
+func (x *MessageAck) ProtoReflect() protoreflect.Message {
+	mi := &file_producer_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MessageAck.ProtoReflect.Descriptor instead.
+func (*MessageAck) Descriptor() ([]byte, []int) {
+	return file_producer_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MessageAck) GetSuccess() bool {
 	if x != nil {
 		return x.Success
 	}
 	return false
 }
 
-func (x *StreamPublishAck) GetErrorMessage() string {
+func (x *MessageAck) GetErrorMessage() string {
 	if x != nil {
 		return x.ErrorMessage
 	}
 	return ""
 }
 
+func (x *MessageAck) GetMessageId() []byte {
+	if x != nil {
+		return x.MessageId
+	}
+	return nil
+}
+
+// PublishBatchAck is the broker's response to a PublishBatch frame.
+// acks[i] corresponds to messages[i] in the original PublishBatch.
+type PublishBatchAck struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Acks          []*MessageAck          `protobuf:"bytes,1,rep,name=acks,proto3" json:"acks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PublishBatchAck) Reset() {
+	*x = PublishBatchAck{}
+	mi := &file_producer_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PublishBatchAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PublishBatchAck) ProtoMessage() {}
+
+func (x *PublishBatchAck) ProtoReflect() protoreflect.Message {
+	mi := &file_producer_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PublishBatchAck.ProtoReflect.Descriptor instead.
+func (*PublishBatchAck) Descriptor() ([]byte, []int) {
+	return file_producer_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *PublishBatchAck) GetAcks() []*MessageAck {
+	if x != nil {
+		return x.Acks
+	}
+	return nil
+}
+
 var File_producer_proto protoreflect.FileDescriptor
 
 const file_producer_proto_rawDesc = "" +
 	"\n" +
-	"\x0eproducer.proto\x12\afutureq\"s\n" +
-	"\x14StreamPublishRequest\x12\x14\n" +
-	"\x05topic\x18\x02 \x01(\tR\x05topic\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\fR\apayload\x12+\n" +
-	"\x12execute_at_unix_ms\x18\x04 \x01(\x03R\x0fexecuteAtUnixMs\"Q\n" +
-	"\x10StreamPublishAck\x12\x18\n" +
-	"\asuccess\x18\x02 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x03 \x01(\tR\ferrorMessage2`\n" +
-	"\x0fFutureQProducer\x12M\n" +
-	"\rPublishStream\x12\x1d.futureq.StreamPublishRequest\x1a\x19.futureq.StreamPublishAck(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
+	"\x0eproducer.proto\x12\afutureq\"r\n" +
+	"\x0ePublishMessage\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
+	"\apayload\x18\x02 \x01(\fR\apayload\x12\x19\n" +
+	"\bdelay_ms\x18\x03 \x01(\x03R\adelayMs\x12\x15\n" +
+	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\"s\n" +
+	"\fPublishBatch\x123\n" +
+	"\bmessages\x18\x01 \x03(\v2\x17.futureq.PublishMessageR\bmessages\x12.\n" +
+	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"j\n" +
+	"\n" +
+	"MessageAck\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12\x1d\n" +
+	"\n" +
+	"message_id\x18\x03 \x01(\fR\tmessageId\":\n" +
+	"\x0fPublishBatchAck\x12'\n" +
+	"\x04acks\x18\x01 \x03(\v2\x13.futureq.MessageAckR\x04acks*Q\n" +
+	"\bAckLevel\x12\x19\n" +
+	"\x15ACK_LEVEL_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10ACK_LEVEL_LEADER\x10\x01\x12\x14\n" +
+	"\x10ACK_LEVEL_QUORUM\x10\x022W\n" +
+	"\x0fFutureQProducer\x12D\n" +
+	"\rPublishStream\x12\x15.futureq.PublishBatch\x1a\x18.futureq.PublishBatchAck(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
 	file_producer_proto_rawDescOnce sync.Once
@@ -160,19 +362,26 @@ func file_producer_proto_rawDescGZIP() []byte {
 	return file_producer_proto_rawDescData
 }
 
-var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_producer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_producer_proto_goTypes = []any{
-	(*StreamPublishRequest)(nil), // 0: futureq.StreamPublishRequest
-	(*StreamPublishAck)(nil),     // 1: futureq.StreamPublishAck
+	(AckLevel)(0),           // 0: futureq.AckLevel
+	(*PublishMessage)(nil),  // 1: futureq.PublishMessage
+	(*PublishBatch)(nil),    // 2: futureq.PublishBatch
+	(*MessageAck)(nil),      // 3: futureq.MessageAck
+	(*PublishBatchAck)(nil), // 4: futureq.PublishBatchAck
 }
 var file_producer_proto_depIdxs = []int32{
-	0, // 0: futureq.FutureQProducer.PublishStream:input_type -> futureq.StreamPublishRequest
-	1, // 1: futureq.FutureQProducer.PublishStream:output_type -> futureq.StreamPublishAck
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: futureq.PublishBatch.messages:type_name -> futureq.PublishMessage
+	0, // 1: futureq.PublishBatch.ack_level:type_name -> futureq.AckLevel
+	3, // 2: futureq.PublishBatchAck.acks:type_name -> futureq.MessageAck
+	2, // 3: futureq.FutureQProducer.PublishStream:input_type -> futureq.PublishBatch
+	4, // 4: futureq.FutureQProducer.PublishStream:output_type -> futureq.PublishBatchAck
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_producer_proto_init() }
@@ -185,13 +394,14 @@ func file_producer_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_producer_proto_rawDesc), len(file_producer_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_producer_proto_goTypes,
 		DependencyIndexes: file_producer_proto_depIdxs,
+		EnumInfos:         file_producer_proto_enumTypes,
 		MessageInfos:      file_producer_proto_msgTypes,
 	}.Build()
 	File_producer_proto = out.File

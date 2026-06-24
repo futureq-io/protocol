@@ -4,17 +4,74 @@ package futureq;
 
 option go_package = "github.com/futureq-io/protocol/proto/go";
 
-message StreamPublishRequest {
-    string topic = 2;
-    bytes payload = 3;
-    int64 execute_at_unix_ms = 4;
+// AckLevel controls how durable a batch publish must be before the broker
+// acknowledges it.
+enum AckLevel {
+    ACK_LEVEL_UNSPECIFIED = 0;
+
+    // ACK_LEVEL_LEADER: the leader has written the batch to its local Pebble
+    // and returns immediately. Followers replicate asynchronously.
+    // Risk: data loss if the leader crashes before replication completes.
+    ACK_LEVEL_LEADER = 1;
+
+    // ACK_LEVEL_QUORUM: a majority of replicas have committed the Raft log
+    // entry before the broker acknowledges. This is the recommended default
+    // for production use.
+    ACK_LEVEL_QUORUM = 2;
 }
 
-message StreamPublishAck {
-    bool success = 2;
-    string error_message = 3;
+// PublishMessage is a single scheduled message inside a PublishBatch.
+message PublishMessage {
+    // topic identifies the logical channel for this message.
+    string topic   = 1;
+
+    // payload is the opaque application data to deliver to consumers.
+    bytes  payload = 2;
+
+    // delay_ms is the number of milliseconds from the broker's receive time
+    // before this message becomes eligible for delivery. Must be >= 0.
+    // A value of 0 means "deliver on the next dispatcher tick".
+    int64  delay_ms = 3;
+
+    // ttl_ms is the message time-to-live in milliseconds, measured from the
+    // broker's receive time. If the message has not been consumed within
+    // ttl_ms milliseconds it will be lazily discarded. 0 means no expiry.
+    int64  ttl_ms = 4;
+}
+
+// PublishBatch is a single frame sent by the producer on the PublishStream.
+// All messages in the batch are written atomically as a single Raft log entry.
+message PublishBatch {
+    repeated PublishMessage messages = 1;
+
+    // ack_level controls when the broker acknowledges this batch.
+    // Defaults to ACK_LEVEL_QUORUM when unspecified.
+    AckLevel ack_level = 2;
+}
+
+// MessageAck is the per-message result inside a PublishBatchAck.
+message MessageAck {
+    // success is true if the message was persisted successfully.
+    bool   success       = 1;
+
+    // error_message contains a human-readable description if success is false.
+    string error_message = 2;
+
+    // message_id is a server-assigned opaque identifier for this message.
+    // It matches the delivery_tag that consumers will receive.
+    bytes  message_id    = 3;
+}
+
+// PublishBatchAck is the broker's response to a PublishBatch frame.
+// acks[i] corresponds to messages[i] in the original PublishBatch.
+message PublishBatchAck {
+    repeated MessageAck acks = 1;
 }
 
 service FutureQProducer {
-    rpc PublishStream(stream StreamPublishRequest) returns (stream StreamPublishAck);
+    // PublishStream is a bidirectional streaming RPC. The client pushes
+    // PublishBatch frames and the broker responds with one PublishBatchAck per
+    // batch. The stream stays alive for the duration of the connection,
+    // allowing high-throughput producers to pipeline multiple batches.
+    rpc PublishStream(stream PublishBatch) returns (stream PublishBatchAck);
 }

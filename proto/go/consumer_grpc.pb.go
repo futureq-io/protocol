@@ -26,7 +26,11 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FutureQConsumerClient interface {
-	Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AckRequest, QueueMessage], error)
+	// Subscribe is a bidirectional streaming RPC. The client sends a
+	// ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
+	// AckRequest). The server pushes QueueMessage frames whenever messages
+	// become ready for the subscribed topic and group.
+	Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ConsumerFrame, QueueMessage], error)
 }
 
 type futureQConsumerClient struct {
@@ -37,24 +41,28 @@ func NewFutureQConsumerClient(cc grpc.ClientConnInterface) FutureQConsumerClient
 	return &futureQConsumerClient{cc}
 }
 
-func (c *futureQConsumerClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AckRequest, QueueMessage], error) {
+func (c *futureQConsumerClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ConsumerFrame, QueueMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &FutureQConsumer_ServiceDesc.Streams[0], FutureQConsumer_Subscribe_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[AckRequest, QueueMessage]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ConsumerFrame, QueueMessage]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FutureQConsumer_SubscribeClient = grpc.BidiStreamingClient[AckRequest, QueueMessage]
+type FutureQConsumer_SubscribeClient = grpc.BidiStreamingClient[ConsumerFrame, QueueMessage]
 
 // FutureQConsumerServer is the server API for FutureQConsumer service.
 // All implementations must embed UnimplementedFutureQConsumerServer
 // for forward compatibility.
 type FutureQConsumerServer interface {
-	Subscribe(grpc.BidiStreamingServer[AckRequest, QueueMessage]) error
+	// Subscribe is a bidirectional streaming RPC. The client sends a
+	// ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
+	// AckRequest). The server pushes QueueMessage frames whenever messages
+	// become ready for the subscribed topic and group.
+	Subscribe(grpc.BidiStreamingServer[ConsumerFrame, QueueMessage]) error
 	mustEmbedUnimplementedFutureQConsumerServer()
 }
 
@@ -65,7 +73,7 @@ type FutureQConsumerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFutureQConsumerServer struct{}
 
-func (UnimplementedFutureQConsumerServer) Subscribe(grpc.BidiStreamingServer[AckRequest, QueueMessage]) error {
+func (UnimplementedFutureQConsumerServer) Subscribe(grpc.BidiStreamingServer[ConsumerFrame, QueueMessage]) error {
 	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
 }
 func (UnimplementedFutureQConsumerServer) mustEmbedUnimplementedFutureQConsumerServer() {}
@@ -90,11 +98,11 @@ func RegisterFutureQConsumerServer(s grpc.ServiceRegistrar, srv FutureQConsumerS
 }
 
 func _FutureQConsumer_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(FutureQConsumerServer).Subscribe(&grpc.GenericServerStream[AckRequest, QueueMessage]{ServerStream: stream})
+	return srv.(FutureQConsumerServer).Subscribe(&grpc.GenericServerStream[ConsumerFrame, QueueMessage]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type FutureQConsumer_SubscribeServer = grpc.BidiStreamingServer[AckRequest, QueueMessage]
+type FutureQConsumer_SubscribeServer = grpc.BidiStreamingServer[ConsumerFrame, QueueMessage]
 
 // FutureQConsumer_ServiceDesc is the grpc.ServiceDesc for FutureQConsumer service.
 // It's only intended for direct use with grpc.RegisterService,

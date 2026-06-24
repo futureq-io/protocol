@@ -21,31 +21,38 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// QueueMessage is pushed from the server to the consumer on the Subscribe stream.
-// delivery_tag is an opaque server-assigned token (the raw Pebble key) that the
-// client must echo back in AckRequest.delivery_tag to acknowledge this message.
-type QueueMessage struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Payload       []byte                 `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
-	DeliveryTag   []byte                 `protobuf:"bytes,3,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+// SubscribeInit is the first frame that a consumer must send on the Subscribe
+// stream. It declares the topic and consumer group for this connection.
+type SubscribeInit struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// topic is the name of the channel to subscribe to.
+	Topic string `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	// group_id identifies the consumer group. Consumers sharing the same
+	// group_id compete for messages (one delivery per group). Different
+	// group_ids on the same topic each receive an independent copy of every
+	// message (fan-out).
+	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	// read_from_replica is reserved for a future follower-read feature.
+	// Setting this field has no effect in the current implementation.
+	ReadFromReplica bool `protobuf:"varint,3,opt,name=read_from_replica,json=readFromReplica,proto3" json:"read_from_replica,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
-func (x *QueueMessage) Reset() {
-	*x = QueueMessage{}
+func (x *SubscribeInit) Reset() {
+	*x = SubscribeInit{}
 	mi := &file_consumer_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *QueueMessage) String() string {
+func (x *SubscribeInit) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueueMessage) ProtoMessage() {}
+func (*SubscribeInit) ProtoMessage() {}
 
-func (x *QueueMessage) ProtoReflect() protoreflect.Message {
+func (x *SubscribeInit) ProtoReflect() protoreflect.Message {
 	mi := &file_consumer_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -57,32 +64,42 @@ func (x *QueueMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use QueueMessage.ProtoReflect.Descriptor instead.
-func (*QueueMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use SubscribeInit.ProtoReflect.Descriptor instead.
+func (*SubscribeInit) Descriptor() ([]byte, []int) {
 	return file_consumer_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *QueueMessage) GetPayload() []byte {
+func (x *SubscribeInit) GetTopic() string {
 	if x != nil {
-		return x.Payload
+		return x.Topic
 	}
-	return nil
+	return ""
 }
 
-func (x *QueueMessage) GetDeliveryTag() []byte {
+func (x *SubscribeInit) GetGroupId() string {
 	if x != nil {
-		return x.DeliveryTag
+		return x.GroupId
 	}
-	return nil
+	return ""
 }
 
-// AckRequest is sent by the consumer back to the server to acknowledge a message.
-// Set success=true and echo the delivery_tag from the corresponding QueueMessage
-// to confirm delivery. Set success=false to NACK (the message will be redelivered).
+func (x *SubscribeInit) GetReadFromReplica() bool {
+	if x != nil {
+		return x.ReadFromReplica
+	}
+	return false
+}
+
+// AckRequest is sent by the consumer to acknowledge or reject a message.
 type AckRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
-	DeliveryTag   []byte                 `protobuf:"bytes,3,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// success=true: message was processed; the broker will delete it.
+	// success=false: message was rejected (NACK); the broker will re-dispatch
+	//
+	//	it to another consumer on the next dispatcher tick.
+	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	// delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
+	DeliveryTag   []byte `protobuf:"bytes,2,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -131,20 +148,201 @@ func (x *AckRequest) GetDeliveryTag() []byte {
 	return nil
 }
 
+// ConsumerFrame is the union type sent by the consumer on the Subscribe stream.
+// The very first frame must carry a SubscribeInit. All subsequent frames must
+// carry AckRequest.
+type ConsumerFrame struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Body:
+	//
+	//	*ConsumerFrame_Init
+	//	*ConsumerFrame_Ack
+	Body          isConsumerFrame_Body `protobuf_oneof:"body"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConsumerFrame) Reset() {
+	*x = ConsumerFrame{}
+	mi := &file_consumer_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConsumerFrame) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConsumerFrame) ProtoMessage() {}
+
+func (x *ConsumerFrame) ProtoReflect() protoreflect.Message {
+	mi := &file_consumer_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConsumerFrame.ProtoReflect.Descriptor instead.
+func (*ConsumerFrame) Descriptor() ([]byte, []int) {
+	return file_consumer_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ConsumerFrame) GetBody() isConsumerFrame_Body {
+	if x != nil {
+		return x.Body
+	}
+	return nil
+}
+
+func (x *ConsumerFrame) GetInit() *SubscribeInit {
+	if x != nil {
+		if x, ok := x.Body.(*ConsumerFrame_Init); ok {
+			return x.Init
+		}
+	}
+	return nil
+}
+
+func (x *ConsumerFrame) GetAck() *AckRequest {
+	if x != nil {
+		if x, ok := x.Body.(*ConsumerFrame_Ack); ok {
+			return x.Ack
+		}
+	}
+	return nil
+}
+
+type isConsumerFrame_Body interface {
+	isConsumerFrame_Body()
+}
+
+type ConsumerFrame_Init struct {
+	Init *SubscribeInit `protobuf:"bytes,1,opt,name=init,proto3,oneof"`
+}
+
+type ConsumerFrame_Ack struct {
+	Ack *AckRequest `protobuf:"bytes,2,opt,name=ack,proto3,oneof"`
+}
+
+func (*ConsumerFrame_Init) isConsumerFrame_Body() {}
+
+func (*ConsumerFrame_Ack) isConsumerFrame_Body() {}
+
+// QueueMessage is pushed by the broker to the consumer when a message becomes
+// eligible for delivery (its delay has elapsed).
+type QueueMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// topic is the channel this message was published on.
+	Topic string `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	// payload is the application data originally sent by the producer.
+	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	// delivery_tag is an opaque server-assigned identifier (the raw Pebble
+	// key). The consumer must echo this in AckRequest.delivery_tag.
+	DeliveryTag []byte `protobuf:"bytes,3,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
+	// enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the
+	// message was first received. Useful for computing actual delivery latency.
+	EnqueuedAtUnixMs int64 `protobuf:"varint,4,opt,name=enqueued_at_unix_ms,json=enqueuedAtUnixMs,proto3" json:"enqueued_at_unix_ms,omitempty"`
+	// delay_ms is the original delay requested by the producer.
+	DelayMs       int64 `protobuf:"varint,5,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QueueMessage) Reset() {
+	*x = QueueMessage{}
+	mi := &file_consumer_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QueueMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueueMessage) ProtoMessage() {}
+
+func (x *QueueMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_consumer_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QueueMessage.ProtoReflect.Descriptor instead.
+func (*QueueMessage) Descriptor() ([]byte, []int) {
+	return file_consumer_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *QueueMessage) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *QueueMessage) GetPayload() []byte {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *QueueMessage) GetDeliveryTag() []byte {
+	if x != nil {
+		return x.DeliveryTag
+	}
+	return nil
+}
+
+func (x *QueueMessage) GetEnqueuedAtUnixMs() int64 {
+	if x != nil {
+		return x.EnqueuedAtUnixMs
+	}
+	return 0
+}
+
+func (x *QueueMessage) GetDelayMs() int64 {
+	if x != nil {
+		return x.DelayMs
+	}
+	return 0
+}
+
 var File_consumer_proto protoreflect.FileDescriptor
 
 const file_consumer_proto_rawDesc = "" +
 	"\n" +
-	"\x0econsumer.proto\x12\afutureq\"K\n" +
-	"\fQueueMessage\x12\x18\n" +
-	"\apayload\x18\x02 \x01(\fR\apayload\x12!\n" +
-	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag\"I\n" +
+	"\x0econsumer.proto\x12\afutureq\"l\n" +
+	"\rSubscribeInit\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12*\n" +
+	"\x11read_from_replica\x18\x03 \x01(\bR\x0freadFromReplica\"I\n" +
 	"\n" +
 	"AckRequest\x12\x18\n" +
-	"\asuccess\x18\x02 \x01(\bR\asuccess\x12!\n" +
-	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag2N\n" +
-	"\x0fFutureQConsumer\x12;\n" +
-	"\tSubscribe\x12\x13.futureq.AckRequest\x1a\x15.futureq.QueueMessage(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
+	"\fdelivery_tag\x18\x02 \x01(\fR\vdeliveryTag\"n\n" +
+	"\rConsumerFrame\x12,\n" +
+	"\x04init\x18\x01 \x01(\v2\x16.futureq.SubscribeInitH\x00R\x04init\x12'\n" +
+	"\x03ack\x18\x02 \x01(\v2\x13.futureq.AckRequestH\x00R\x03ackB\x06\n" +
+	"\x04body\"\xab\x01\n" +
+	"\fQueueMessage\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
+	"\apayload\x18\x02 \x01(\fR\apayload\x12!\n" +
+	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag\x12-\n" +
+	"\x13enqueued_at_unix_ms\x18\x04 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
+	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs2Q\n" +
+	"\x0fFutureQConsumer\x12>\n" +
+	"\tSubscribe\x12\x16.futureq.ConsumerFrame\x1a\x15.futureq.QueueMessage(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
 	file_consumer_proto_rawDescOnce sync.Once
@@ -158,19 +356,23 @@ func file_consumer_proto_rawDescGZIP() []byte {
 	return file_consumer_proto_rawDescData
 }
 
-var file_consumer_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_consumer_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_consumer_proto_goTypes = []any{
-	(*QueueMessage)(nil), // 0: futureq.QueueMessage
-	(*AckRequest)(nil),   // 1: futureq.AckRequest
+	(*SubscribeInit)(nil), // 0: futureq.SubscribeInit
+	(*AckRequest)(nil),    // 1: futureq.AckRequest
+	(*ConsumerFrame)(nil), // 2: futureq.ConsumerFrame
+	(*QueueMessage)(nil),  // 3: futureq.QueueMessage
 }
 var file_consumer_proto_depIdxs = []int32{
-	1, // 0: futureq.FutureQConsumer.Subscribe:input_type -> futureq.AckRequest
-	0, // 1: futureq.FutureQConsumer.Subscribe:output_type -> futureq.QueueMessage
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: futureq.ConsumerFrame.init:type_name -> futureq.SubscribeInit
+	1, // 1: futureq.ConsumerFrame.ack:type_name -> futureq.AckRequest
+	2, // 2: futureq.FutureQConsumer.Subscribe:input_type -> futureq.ConsumerFrame
+	3, // 3: futureq.FutureQConsumer.Subscribe:output_type -> futureq.QueueMessage
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_consumer_proto_init() }
@@ -178,13 +380,17 @@ func file_consumer_proto_init() {
 	if File_consumer_proto != nil {
 		return
 	}
+	file_consumer_proto_msgTypes[2].OneofWrappers = []any{
+		(*ConsumerFrame_Init)(nil),
+		(*ConsumerFrame_Ack)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_consumer_proto_rawDesc), len(file_consumer_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package futureq;
+
+option go_package = "github.com/futureq-io/protocol/proto/go";
+
+// NodeInfo describes a single node in the FutureQ cluster.
+message NodeInfo {
+    // node_id is the unique integer identifier of this node (matches raft.NodeID).
+    uint64 node_id  = 1;
+
+    // address is the gRPC listen address of this node (host:port).
+    string address  = 2;
+
+    // is_leader is true if this node is the current Raft leader.
+    bool   is_leader = 3;
+
+    // is_alive is true if this node was reachable as of the last gossip heartbeat.
+    bool   is_alive  = 4;
+}
+
+message ClusterInfoRequest {}
+
+// ClusterInfoResponse describes the current cluster topology.
+// Any node can respond to this RPC — it does not need to be the leader.
+message ClusterInfoResponse {
+    // leader_node_id is the node_id of the current Raft leader, or 0 if unknown.
+    uint64            leader_node_id = 1;
+
+    // leader_address is the gRPC address of the current leader.
+    // Clients that need to produce or consume should connect to this address.
+    string            leader_address = 2;
+
+    // nodes lists all known cluster members.
+    repeated NodeInfo nodes          = 3;
+}
+
+// JoinRequest is sent by a new node that wishes to join the cluster.
+// The request can be sent to any existing member; it will be forwarded to
+// the leader internally.
+message JoinRequest {
+    // node_id is the unique ID of the joining node (must not conflict with
+    // any existing member).
+    uint64 node_id = 1;
+
+    // raft_address is the Raft (Dragonboat) listen address of the joining node.
+    string raft_address = 2;
+
+    // grpc_address is the gRPC listen address of the joining node.
+    string grpc_address = 3;
+}
+
+message JoinResponse {
+    bool   success       = 1;
+    string error_message = 2;
+}
+
+// LeaveRequest is sent by a node that wishes to gracefully leave the cluster.
+message LeaveRequest {
+    // node_id is the ID of the departing node.
+    uint64 node_id = 1;
+}
+
+message LeaveResponse {
+    bool   success       = 1;
+    string error_message = 2;
+}
+
+service FutureQCluster {
+    // GetClusterInfo returns the current cluster topology. Any node responds.
+    // Clients should call this on startup and after any connection failure to
+    // discover (or re-discover) the current leader.
+    rpc GetClusterInfo(ClusterInfoRequest) returns (ClusterInfoResponse);
+
+    // JoinCluster adds a new node to the cluster. The request may be sent to
+    // any existing member and will be forwarded to the leader.
+    rpc JoinCluster(JoinRequest) returns (JoinResponse);
+
+    // LeaveCluster removes a node from the cluster gracefully. The departing
+    // node must call this on itself (or the operator calls it remotely) before
+    // shutting down to ensure a clean Raft config-change.
+    rpc LeaveCluster(LeaveRequest) returns (LeaveResponse);
+}
