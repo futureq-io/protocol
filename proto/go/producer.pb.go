@@ -211,8 +211,9 @@ func (x *PublishBatch) GetAckLevel() AckLevel {
 	return AckLevel_ACK_LEVEL_UNSPECIFIED
 }
 
-// MessageAck is the per-message result inside a PublishBatchAck.
-type MessageAck struct {
+// PublishBatchAck is the broker's response to a PublishBatch frame.
+// The whole batch was either successful or failed.
+type PublishBatchAck struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// success is true if the message was persisted successfully.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
@@ -222,62 +223,9 @@ type MessageAck struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MessageAck) Reset() {
-	*x = MessageAck{}
-	mi := &file_producer_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MessageAck) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MessageAck) ProtoMessage() {}
-
-func (x *MessageAck) ProtoReflect() protoreflect.Message {
-	mi := &file_producer_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MessageAck.ProtoReflect.Descriptor instead.
-func (*MessageAck) Descriptor() ([]byte, []int) {
-	return file_producer_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *MessageAck) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *MessageAck) GetErrorMessage() string {
-	if x != nil {
-		return x.ErrorMessage
-	}
-	return ""
-}
-
-// PublishBatchAck is the broker's response to a PublishBatch frame.
-// acks[i] corresponds to messages[i] in the original PublishBatch.
-type PublishBatchAck struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Acks          []*MessageAck          `protobuf:"bytes,1,rep,name=acks,proto3" json:"acks,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
 func (x *PublishBatchAck) Reset() {
 	*x = PublishBatchAck{}
-	mi := &file_producer_proto_msgTypes[3]
+	mi := &file_producer_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -289,7 +237,7 @@ func (x *PublishBatchAck) String() string {
 func (*PublishBatchAck) ProtoMessage() {}
 
 func (x *PublishBatchAck) ProtoReflect() protoreflect.Message {
-	mi := &file_producer_proto_msgTypes[3]
+	mi := &file_producer_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -302,14 +250,21 @@ func (x *PublishBatchAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishBatchAck.ProtoReflect.Descriptor instead.
 func (*PublishBatchAck) Descriptor() ([]byte, []int) {
-	return file_producer_proto_rawDescGZIP(), []int{3}
+	return file_producer_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *PublishBatchAck) GetAcks() []*MessageAck {
+func (x *PublishBatchAck) GetSuccess() bool {
 	if x != nil {
-		return x.Acks
+		return x.Success
 	}
-	return nil
+	return false
+}
+
+func (x *PublishBatchAck) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
 }
 
 var File_producer_proto protoreflect.FileDescriptor
@@ -324,13 +279,10 @@ const file_producer_proto_rawDesc = "" +
 	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\"s\n" +
 	"\fPublishBatch\x123\n" +
 	"\bmessages\x18\x01 \x03(\v2\x17.futureq.PublishMessageR\bmessages\x12.\n" +
-	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"K\n" +
-	"\n" +
-	"MessageAck\x12\x18\n" +
+	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"P\n" +
+	"\x0fPublishBatchAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\":\n" +
-	"\x0fPublishBatchAck\x12'\n" +
-	"\x04acks\x18\x01 \x03(\v2\x13.futureq.MessageAckR\x04acks*Q\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*Q\n" +
 	"\bAckLevel\x12\x19\n" +
 	"\x15ACK_LEVEL_UNSPECIFIED\x10\x00\x12\x14\n" +
 	"\x10ACK_LEVEL_LEADER\x10\x01\x12\x14\n" +
@@ -351,25 +303,23 @@ func file_producer_proto_rawDescGZIP() []byte {
 }
 
 var file_producer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_producer_proto_goTypes = []any{
 	(AckLevel)(0),           // 0: futureq.AckLevel
 	(*PublishMessage)(nil),  // 1: futureq.PublishMessage
 	(*PublishBatch)(nil),    // 2: futureq.PublishBatch
-	(*MessageAck)(nil),      // 3: futureq.MessageAck
-	(*PublishBatchAck)(nil), // 4: futureq.PublishBatchAck
+	(*PublishBatchAck)(nil), // 3: futureq.PublishBatchAck
 }
 var file_producer_proto_depIdxs = []int32{
 	1, // 0: futureq.PublishBatch.messages:type_name -> futureq.PublishMessage
 	0, // 1: futureq.PublishBatch.ack_level:type_name -> futureq.AckLevel
-	3, // 2: futureq.PublishBatchAck.acks:type_name -> futureq.MessageAck
-	2, // 3: futureq.FutureQProducer.PublishStream:input_type -> futureq.PublishBatch
-	4, // 4: futureq.FutureQProducer.PublishStream:output_type -> futureq.PublishBatchAck
-	4, // [4:5] is the sub-list for method output_type
-	3, // [3:4] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	2, // 2: futureq.FutureQProducer.PublishStream:input_type -> futureq.PublishBatch
+	3, // 3: futureq.FutureQProducer.PublishStream:output_type -> futureq.PublishBatchAck
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_producer_proto_init() }
@@ -383,7 +333,7 @@ func file_producer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_producer_proto_rawDesc), len(file_producer_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

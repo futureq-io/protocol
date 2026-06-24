@@ -49,19 +49,14 @@ message PublishBatch {
     AckLevel ack_level = 2;
 }
 
-// MessageAck is the per-message result inside a PublishBatchAck.
-message MessageAck {
+// PublishBatchAck is the broker's response to a PublishBatch frame.
+// The whole batch was either successful or failed.
+message PublishBatchAck {
     // success is true if the message was persisted successfully.
     bool   success       = 1;
 
     // error_message contains a human-readable description if success is false.
     string error_message = 2;
-}
-
-// PublishBatchAck is the broker's response to a PublishBatch frame.
-// acks[i] corresponds to messages[i] in the original PublishBatch.
-message PublishBatchAck {
-    repeated MessageAck acks = 1;
 }
 
 service FutureQProducer {
