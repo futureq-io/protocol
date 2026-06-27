@@ -26,28 +26,22 @@ const (
 type AckLevel int32
 
 const (
-	AckLevel_ACK_LEVEL_UNSPECIFIED AckLevel = 0
-	// ACK_LEVEL_LEADER: the leader has written the batch to its local Pebble
-	// and returns immediately. Followers replicate asynchronously.
-	// Risk: data loss if the leader crashes before replication completes.
-	AckLevel_ACK_LEVEL_LEADER AckLevel = 1
+	AckLevel_ACK_LEVEL_NO_ACK AckLevel = 0
 	// ACK_LEVEL_QUORUM: a majority of replicas have committed the Raft log
 	// entry before the broker acknowledges. This is the recommended default
 	// for production use.
-	AckLevel_ACK_LEVEL_QUORUM AckLevel = 2
+	AckLevel_ACK_LEVEL_QUORUM AckLevel = 1
 )
 
 // Enum value maps for AckLevel.
 var (
 	AckLevel_name = map[int32]string{
-		0: "ACK_LEVEL_UNSPECIFIED",
-		1: "ACK_LEVEL_LEADER",
-		2: "ACK_LEVEL_QUORUM",
+		0: "ACK_LEVEL_NO_ACK",
+		1: "ACK_LEVEL_QUORUM",
 	}
 	AckLevel_value = map[string]int32{
-		"ACK_LEVEL_UNSPECIFIED": 0,
-		"ACK_LEVEL_LEADER":      1,
-		"ACK_LEVEL_QUORUM":      2,
+		"ACK_LEVEL_NO_ACK": 0,
+		"ACK_LEVEL_QUORUM": 1,
 	}
 )
 
@@ -208,7 +202,7 @@ func (x *PublishBatch) GetAckLevel() AckLevel {
 	if x != nil {
 		return x.AckLevel
 	}
-	return AckLevel_ACK_LEVEL_UNSPECIFIED
+	return AckLevel_ACK_LEVEL_NO_ACK
 }
 
 // PublishBatchAck is the broker's response to a PublishBatch frame.
@@ -282,11 +276,10 @@ const file_producer_proto_rawDesc = "" +
 	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"P\n" +
 	"\x0fPublishBatchAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*Q\n" +
-	"\bAckLevel\x12\x19\n" +
-	"\x15ACK_LEVEL_UNSPECIFIED\x10\x00\x12\x14\n" +
-	"\x10ACK_LEVEL_LEADER\x10\x01\x12\x14\n" +
-	"\x10ACK_LEVEL_QUORUM\x10\x022W\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*6\n" +
+	"\bAckLevel\x12\x14\n" +
+	"\x10ACK_LEVEL_NO_ACK\x10\x00\x12\x14\n" +
+	"\x10ACK_LEVEL_QUORUM\x10\x012W\n" +
 	"\x0fFutureQProducer\x12D\n" +
 	"\rPublishStream\x12\x15.futureq.PublishBatch\x1a\x18.futureq.PublishBatchAck(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
