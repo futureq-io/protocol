@@ -11,6 +11,13 @@ enum AckLevel {
     ACK_LEVEL_NO_ACK = 1;
 }
 
+message Index {
+    oneof value {
+        int64 int64_value = 1;
+        string string_value = 2;
+    }
+}
+
 // PublishMessage is a single scheduled message inside a PublishBatch.
 message PublishMessage {
     // topic identifies the logical channel for this message.
@@ -28,6 +35,11 @@ message PublishMessage {
     // broker's receive time. If the message has not been consumed within
     // ttl_ms milliseconds it will be lazily discarded. 0 means no expiry.
     int64  ttl_ms = 4;
+
+    // these are the indexes for the published event
+    // it's a mapping from index to delivery_tags (direct pebble keys)
+    // Indexes are expensive in FutureQ
+    repeated Index indexes = 5;
 }
 
 // PublishBatch is a single frame sent by the producer on the PublishStream.

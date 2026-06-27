@@ -69,6 +69,88 @@ func (AckLevel) EnumDescriptor() ([]byte, []int) {
 	return file_producer_proto_rawDescGZIP(), []int{0}
 }
 
+type Index struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Value:
+	//
+	//	*Index_Int64Value
+	//	*Index_StringValue
+	Value         isIndex_Value `protobuf_oneof:"value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Index) Reset() {
+	*x = Index{}
+	mi := &file_producer_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Index) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Index) ProtoMessage() {}
+
+func (x *Index) ProtoReflect() protoreflect.Message {
+	mi := &file_producer_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Index.ProtoReflect.Descriptor instead.
+func (*Index) Descriptor() ([]byte, []int) {
+	return file_producer_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Index) GetValue() isIndex_Value {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *Index) GetInt64Value() int64 {
+	if x != nil {
+		if x, ok := x.Value.(*Index_Int64Value); ok {
+			return x.Int64Value
+		}
+	}
+	return 0
+}
+
+func (x *Index) GetStringValue() string {
+	if x != nil {
+		if x, ok := x.Value.(*Index_StringValue); ok {
+			return x.StringValue
+		}
+	}
+	return ""
+}
+
+type isIndex_Value interface {
+	isIndex_Value()
+}
+
+type Index_Int64Value struct {
+	Int64Value int64 `protobuf:"varint,1,opt,name=int64_value,json=int64Value,proto3,oneof"`
+}
+
+type Index_StringValue struct {
+	StringValue string `protobuf:"bytes,2,opt,name=string_value,json=stringValue,proto3,oneof"`
+}
+
+func (*Index_Int64Value) isIndex_Value() {}
+
+func (*Index_StringValue) isIndex_Value() {}
+
 // PublishMessage is a single scheduled message inside a PublishBatch.
 type PublishMessage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -83,14 +165,18 @@ type PublishMessage struct {
 	// ttl_ms is the message time-to-live in milliseconds, measured from the
 	// broker's receive time. If the message has not been consumed within
 	// ttl_ms milliseconds it will be lazily discarded. 0 means no expiry.
-	TtlMs         int64 `protobuf:"varint,4,opt,name=ttl_ms,json=ttlMs,proto3" json:"ttl_ms,omitempty"`
+	TtlMs int64 `protobuf:"varint,4,opt,name=ttl_ms,json=ttlMs,proto3" json:"ttl_ms,omitempty"`
+	// these are the indexes for the published event
+	// it's a mapping from index to delivery_tags (direct pebble keys)
+	// Indexes are expensive in FutureQ
+	Indexes       []*Index `protobuf:"bytes,5,rep,name=indexes,proto3" json:"indexes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PublishMessage) Reset() {
 	*x = PublishMessage{}
-	mi := &file_producer_proto_msgTypes[0]
+	mi := &file_producer_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -102,7 +188,7 @@ func (x *PublishMessage) String() string {
 func (*PublishMessage) ProtoMessage() {}
 
 func (x *PublishMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_producer_proto_msgTypes[0]
+	mi := &file_producer_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -115,7 +201,7 @@ func (x *PublishMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishMessage.ProtoReflect.Descriptor instead.
 func (*PublishMessage) Descriptor() ([]byte, []int) {
-	return file_producer_proto_rawDescGZIP(), []int{0}
+	return file_producer_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PublishMessage) GetTopic() string {
@@ -146,6 +232,13 @@ func (x *PublishMessage) GetTtlMs() int64 {
 	return 0
 }
 
+func (x *PublishMessage) GetIndexes() []*Index {
+	if x != nil {
+		return x.Indexes
+	}
+	return nil
+}
+
 // PublishBatch is a single frame sent by the producer on the PublishStream.
 // All messages in the batch are written atomically as a single Raft log entry.
 type PublishBatch struct {
@@ -160,7 +253,7 @@ type PublishBatch struct {
 
 func (x *PublishBatch) Reset() {
 	*x = PublishBatch{}
-	mi := &file_producer_proto_msgTypes[1]
+	mi := &file_producer_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -172,7 +265,7 @@ func (x *PublishBatch) String() string {
 func (*PublishBatch) ProtoMessage() {}
 
 func (x *PublishBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_producer_proto_msgTypes[1]
+	mi := &file_producer_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -185,7 +278,7 @@ func (x *PublishBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishBatch.ProtoReflect.Descriptor instead.
 func (*PublishBatch) Descriptor() ([]byte, []int) {
-	return file_producer_proto_rawDescGZIP(), []int{1}
+	return file_producer_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PublishBatch) GetMessages() []*PublishMessage {
@@ -216,7 +309,7 @@ type PublishBatchAck struct {
 
 func (x *PublishBatchAck) Reset() {
 	*x = PublishBatchAck{}
-	mi := &file_producer_proto_msgTypes[2]
+	mi := &file_producer_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -228,7 +321,7 @@ func (x *PublishBatchAck) String() string {
 func (*PublishBatchAck) ProtoMessage() {}
 
 func (x *PublishBatchAck) ProtoReflect() protoreflect.Message {
-	mi := &file_producer_proto_msgTypes[2]
+	mi := &file_producer_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -241,7 +334,7 @@ func (x *PublishBatchAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PublishBatchAck.ProtoReflect.Descriptor instead.
 func (*PublishBatchAck) Descriptor() ([]byte, []int) {
-	return file_producer_proto_rawDescGZIP(), []int{2}
+	return file_producer_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PublishBatchAck) GetSuccess() bool {
@@ -262,12 +355,18 @@ var File_producer_proto protoreflect.FileDescriptor
 
 const file_producer_proto_rawDesc = "" +
 	"\n" +
-	"\x0eproducer.proto\x12\afutureq\"r\n" +
+	"\x0eproducer.proto\x12\afutureq\"X\n" +
+	"\x05Index\x12!\n" +
+	"\vint64_value\x18\x01 \x01(\x03H\x00R\n" +
+	"int64Value\x12#\n" +
+	"\fstring_value\x18\x02 \x01(\tH\x00R\vstringValueB\a\n" +
+	"\x05value\"\x9c\x01\n" +
 	"\x0ePublishMessage\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12\x19\n" +
 	"\bdelay_ms\x18\x03 \x01(\x03R\adelayMs\x12\x15\n" +
-	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\"s\n" +
+	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\x12(\n" +
+	"\aindexes\x18\x05 \x03(\v2\x0e.futureq.IndexR\aindexes\"s\n" +
 	"\fPublishBatch\x123\n" +
 	"\bmessages\x18\x01 \x03(\v2\x17.futureq.PublishMessageR\bmessages\x12.\n" +
 	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"P\n" +
@@ -293,23 +392,25 @@ func file_producer_proto_rawDescGZIP() []byte {
 }
 
 var file_producer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_producer_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_producer_proto_goTypes = []any{
 	(AckLevel)(0),           // 0: futureq.AckLevel
-	(*PublishMessage)(nil),  // 1: futureq.PublishMessage
-	(*PublishBatch)(nil),    // 2: futureq.PublishBatch
-	(*PublishBatchAck)(nil), // 3: futureq.PublishBatchAck
+	(*Index)(nil),           // 1: futureq.Index
+	(*PublishMessage)(nil),  // 2: futureq.PublishMessage
+	(*PublishBatch)(nil),    // 3: futureq.PublishBatch
+	(*PublishBatchAck)(nil), // 4: futureq.PublishBatchAck
 }
 var file_producer_proto_depIdxs = []int32{
-	1, // 0: futureq.PublishBatch.messages:type_name -> futureq.PublishMessage
-	0, // 1: futureq.PublishBatch.ack_level:type_name -> futureq.AckLevel
-	2, // 2: futureq.FutureQProducer.PublishStream:input_type -> futureq.PublishBatch
-	3, // 3: futureq.FutureQProducer.PublishStream:output_type -> futureq.PublishBatchAck
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: futureq.PublishMessage.indexes:type_name -> futureq.Index
+	2, // 1: futureq.PublishBatch.messages:type_name -> futureq.PublishMessage
+	0, // 2: futureq.PublishBatch.ack_level:type_name -> futureq.AckLevel
+	3, // 3: futureq.FutureQProducer.PublishStream:input_type -> futureq.PublishBatch
+	4, // 4: futureq.FutureQProducer.PublishStream:output_type -> futureq.PublishBatchAck
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_producer_proto_init() }
@@ -317,13 +418,17 @@ func file_producer_proto_init() {
 	if File_producer_proto != nil {
 		return
 	}
+	file_producer_proto_msgTypes[0].OneofWrappers = []any{
+		(*Index_Int64Value)(nil),
+		(*Index_StringValue)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_producer_proto_rawDesc), len(file_producer_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
