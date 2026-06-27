@@ -31,12 +31,9 @@ type SubscribeInit struct {
 	// group_id compete for messages (one delivery per group). Different
 	// group_ids on the same topic each receive an independent copy of every
 	// message (fan-out).
-	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
-	// read_from_replica is reserved for a future follower-read feature.
-	// Setting this field has no effect in the current implementation.
-	ReadFromReplica bool `protobuf:"varint,3,opt,name=read_from_replica,json=readFromReplica,proto3" json:"read_from_replica,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	GroupId       string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SubscribeInit) Reset() {
@@ -81,13 +78,6 @@ func (x *SubscribeInit) GetGroupId() string {
 		return x.GroupId
 	}
 	return ""
-}
-
-func (x *SubscribeInit) GetReadFromReplica() bool {
-	if x != nil {
-		return x.ReadFromReplica
-	}
-	return false
 }
 
 // AckRequest is sent by the consumer to acknowledge or reject a message.
@@ -322,11 +312,10 @@ var File_consumer_proto protoreflect.FileDescriptor
 
 const file_consumer_proto_rawDesc = "" +
 	"\n" +
-	"\x0econsumer.proto\x12\afutureq\"l\n" +
+	"\x0econsumer.proto\x12\afutureq\"@\n" +
 	"\rSubscribeInit\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
-	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12*\n" +
-	"\x11read_from_replica\x18\x03 \x01(\bR\x0freadFromReplica\"I\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"I\n" +
 	"\n" +
 	"AckRequest\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +

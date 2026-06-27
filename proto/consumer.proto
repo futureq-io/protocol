@@ -16,9 +16,6 @@ message SubscribeInit {
     // message (fan-out).
     string group_id = 2;
 
-    // read_from_replica is reserved for a future follower-read feature.
-    // Setting this field has no effect in the current implementation.
-    bool   read_from_replica = 3;
 }
 
 // AckRequest is sent by the consumer to acknowledge or reject a message.
