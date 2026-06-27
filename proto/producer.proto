@@ -7,12 +7,8 @@ option go_package = "github.com/futureq-io/protocol/proto/go";
 // AckLevel controls how durable a batch publish must be before the broker
 // acknowledges it.
 enum AckLevel {
-    ACK_LEVEL_NO_ACK = 0;
-
-    // ACK_LEVEL_QUORUM: a majority of replicas have committed the Raft log
-    // entry before the broker acknowledges. This is the recommended default
-    // for production use.
-    ACK_LEVEL_QUORUM = 1;
+    ACK_LEVEL_QUORUM = 0;
+    ACK_LEVEL_NO_ACK = 1;
 }
 
 // PublishMessage is a single scheduled message inside a PublishBatch.

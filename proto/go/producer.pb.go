@@ -26,22 +26,19 @@ const (
 type AckLevel int32
 
 const (
-	AckLevel_ACK_LEVEL_NO_ACK AckLevel = 0
-	// ACK_LEVEL_QUORUM: a majority of replicas have committed the Raft log
-	// entry before the broker acknowledges. This is the recommended default
-	// for production use.
-	AckLevel_ACK_LEVEL_QUORUM AckLevel = 1
+	AckLevel_ACK_LEVEL_QUORUM AckLevel = 0
+	AckLevel_ACK_LEVEL_NO_ACK AckLevel = 1
 )
 
 // Enum value maps for AckLevel.
 var (
 	AckLevel_name = map[int32]string{
-		0: "ACK_LEVEL_NO_ACK",
-		1: "ACK_LEVEL_QUORUM",
+		0: "ACK_LEVEL_QUORUM",
+		1: "ACK_LEVEL_NO_ACK",
 	}
 	AckLevel_value = map[string]int32{
-		"ACK_LEVEL_NO_ACK": 0,
-		"ACK_LEVEL_QUORUM": 1,
+		"ACK_LEVEL_QUORUM": 0,
+		"ACK_LEVEL_NO_ACK": 1,
 	}
 )
 
@@ -202,7 +199,7 @@ func (x *PublishBatch) GetAckLevel() AckLevel {
 	if x != nil {
 		return x.AckLevel
 	}
-	return AckLevel_ACK_LEVEL_NO_ACK
+	return AckLevel_ACK_LEVEL_QUORUM
 }
 
 // PublishBatchAck is the broker's response to a PublishBatch frame.
@@ -278,8 +275,8 @@ const file_producer_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
 	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*6\n" +
 	"\bAckLevel\x12\x14\n" +
-	"\x10ACK_LEVEL_NO_ACK\x10\x00\x12\x14\n" +
-	"\x10ACK_LEVEL_QUORUM\x10\x012W\n" +
+	"\x10ACK_LEVEL_QUORUM\x10\x00\x12\x14\n" +
+	"\x10ACK_LEVEL_NO_ACK\x10\x012W\n" +
 	"\x0fFutureQProducer\x12D\n" +
 	"\rPublishStream\x12\x15.futureq.PublishBatch\x1a\x18.futureq.PublishBatchAck(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
