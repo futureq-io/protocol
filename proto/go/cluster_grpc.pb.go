@@ -22,6 +22,8 @@ const (
 	FutureQCluster_GetClusterInfo_FullMethodName = "/futureq.FutureQCluster/GetClusterInfo"
 	FutureQCluster_JoinCluster_FullMethodName    = "/futureq.FutureQCluster/JoinCluster"
 	FutureQCluster_LeaveCluster_FullMethodName   = "/futureq.FutureQCluster/LeaveCluster"
+	FutureQCluster_JoinMetadata_FullMethodName   = "/futureq.FutureQCluster/JoinMetadata"
+	FutureQCluster_LeaveMetadata_FullMethodName  = "/futureq.FutureQCluster/LeaveMetadata"
 )
 
 // FutureQClusterClient is the client API for FutureQCluster service.
@@ -39,6 +41,12 @@ type FutureQClusterClient interface {
 	// node must call this on itself (or the operator calls it remotely) before
 	// shutting down to ensure a clean Raft config-change.
 	LeaveCluster(ctx context.Context, in *LeaveRequest, opts ...grpc.CallOption) (*LeaveResponse, error)
+	// JoinMetadata adds a non-voting observer to the metadata Raft group.
+	// Used by client SDKs and new broker nodes to receive real-time topology
+	// updates without participating in metadata consensus.
+	JoinMetadata(ctx context.Context, in *JoinMetadataRequest, opts ...grpc.CallOption) (*JoinMetadataResponse, error)
+	// LeaveMetadata removes a non-voting observer from the metadata Raft group.
+	LeaveMetadata(ctx context.Context, in *LeaveMetadataRequest, opts ...grpc.CallOption) (*LeaveMetadataResponse, error)
 }
 
 type futureQClusterClient struct {
@@ -79,6 +87,26 @@ func (c *futureQClusterClient) LeaveCluster(ctx context.Context, in *LeaveReques
 	return out, nil
 }
 
+func (c *futureQClusterClient) JoinMetadata(ctx context.Context, in *JoinMetadataRequest, opts ...grpc.CallOption) (*JoinMetadataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(JoinMetadataResponse)
+	err := c.cc.Invoke(ctx, FutureQCluster_JoinMetadata_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *futureQClusterClient) LeaveMetadata(ctx context.Context, in *LeaveMetadataRequest, opts ...grpc.CallOption) (*LeaveMetadataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LeaveMetadataResponse)
+	err := c.cc.Invoke(ctx, FutureQCluster_LeaveMetadata_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FutureQClusterServer is the server API for FutureQCluster service.
 // All implementations must embed UnimplementedFutureQClusterServer
 // for forward compatibility.
@@ -94,6 +122,12 @@ type FutureQClusterServer interface {
 	// node must call this on itself (or the operator calls it remotely) before
 	// shutting down to ensure a clean Raft config-change.
 	LeaveCluster(context.Context, *LeaveRequest) (*LeaveResponse, error)
+	// JoinMetadata adds a non-voting observer to the metadata Raft group.
+	// Used by client SDKs and new broker nodes to receive real-time topology
+	// updates without participating in metadata consensus.
+	JoinMetadata(context.Context, *JoinMetadataRequest) (*JoinMetadataResponse, error)
+	// LeaveMetadata removes a non-voting observer from the metadata Raft group.
+	LeaveMetadata(context.Context, *LeaveMetadataRequest) (*LeaveMetadataResponse, error)
 	mustEmbedUnimplementedFutureQClusterServer()
 }
 
@@ -112,6 +146,12 @@ func (UnimplementedFutureQClusterServer) JoinCluster(context.Context, *JoinReque
 }
 func (UnimplementedFutureQClusterServer) LeaveCluster(context.Context, *LeaveRequest) (*LeaveResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method LeaveCluster not implemented")
+}
+func (UnimplementedFutureQClusterServer) JoinMetadata(context.Context, *JoinMetadataRequest) (*JoinMetadataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method JoinMetadata not implemented")
+}
+func (UnimplementedFutureQClusterServer) LeaveMetadata(context.Context, *LeaveMetadataRequest) (*LeaveMetadataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method LeaveMetadata not implemented")
 }
 func (UnimplementedFutureQClusterServer) mustEmbedUnimplementedFutureQClusterServer() {}
 func (UnimplementedFutureQClusterServer) testEmbeddedByValue()                        {}
@@ -188,6 +228,42 @@ func _FutureQCluster_LeaveCluster_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FutureQCluster_JoinMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JoinMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FutureQClusterServer).JoinMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FutureQCluster_JoinMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FutureQClusterServer).JoinMetadata(ctx, req.(*JoinMetadataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FutureQCluster_LeaveMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LeaveMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FutureQClusterServer).LeaveMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FutureQCluster_LeaveMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FutureQClusterServer).LeaveMetadata(ctx, req.(*LeaveMetadataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FutureQCluster_ServiceDesc is the grpc.ServiceDesc for FutureQCluster service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +282,14 @@ var FutureQCluster_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LeaveCluster",
 			Handler:    _FutureQCluster_LeaveCluster_Handler,
+		},
+		{
+			MethodName: "JoinMetadata",
+			Handler:    _FutureQCluster_JoinMetadata_Handler,
+		},
+		{
+			MethodName: "LeaveMetadata",
+			Handler:    _FutureQCluster_LeaveMetadata_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -413,6 +413,212 @@ func (x *LeaveResponse) GetErrorMessage() string {
 	return ""
 }
 
+// JoinMetadataRequest is sent by a node or client SDK that wishes to observe
+// the cluster topology by joining the metadata Raft group as a non-voting member.
+type JoinMetadataRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// node_id is the unique ID of the joining observer.
+	NodeId uint64 `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	// raft_address is the Raft (Dragonboat) listen address of the joining observer.
+	RaftAddress   string `protobuf:"bytes,2,opt,name=raft_address,json=raftAddress,proto3" json:"raft_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinMetadataRequest) Reset() {
+	*x = JoinMetadataRequest{}
+	mi := &file_cluster_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinMetadataRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinMetadataRequest) ProtoMessage() {}
+
+func (x *JoinMetadataRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinMetadataRequest.ProtoReflect.Descriptor instead.
+func (*JoinMetadataRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *JoinMetadataRequest) GetNodeId() uint64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+func (x *JoinMetadataRequest) GetRaftAddress() string {
+	if x != nil {
+		return x.RaftAddress
+	}
+	return ""
+}
+
+type JoinMetadataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JoinMetadataResponse) Reset() {
+	*x = JoinMetadataResponse{}
+	mi := &file_cluster_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JoinMetadataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JoinMetadataResponse) ProtoMessage() {}
+
+func (x *JoinMetadataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JoinMetadataResponse.ProtoReflect.Descriptor instead.
+func (*JoinMetadataResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *JoinMetadataResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *JoinMetadataResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+// LeaveMetadataRequest is sent by an observer that wishes to leave the metadata group.
+type LeaveMetadataRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// node_id is the ID of the departing observer.
+	NodeId        uint64 `protobuf:"varint,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveMetadataRequest) Reset() {
+	*x = LeaveMetadataRequest{}
+	mi := &file_cluster_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveMetadataRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveMetadataRequest) ProtoMessage() {}
+
+func (x *LeaveMetadataRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveMetadataRequest.ProtoReflect.Descriptor instead.
+func (*LeaveMetadataRequest) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LeaveMetadataRequest) GetNodeId() uint64 {
+	if x != nil {
+		return x.NodeId
+	}
+	return 0
+}
+
+type LeaveMetadataResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LeaveMetadataResponse) Reset() {
+	*x = LeaveMetadataResponse{}
+	mi := &file_cluster_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LeaveMetadataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LeaveMetadataResponse) ProtoMessage() {}
+
+func (x *LeaveMetadataResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LeaveMetadataResponse.ProtoReflect.Descriptor instead.
+func (*LeaveMetadataResponse) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *LeaveMetadataResponse) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *LeaveMetadataResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
 var File_cluster_proto protoreflect.FileDescriptor
 
 const file_cluster_proto_rawDesc = "" +
@@ -439,11 +645,24 @@ const file_cluster_proto_rawDesc = "" +
 	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\"N\n" +
 	"\rLeaveResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage2\xd8\x01\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"Q\n" +
+	"\x13JoinMetadataRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\x12!\n" +
+	"\fraft_address\x18\x02 \x01(\tR\vraftAddress\"U\n" +
+	"\x14JoinMetadataResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\"/\n" +
+	"\x14LeaveMetadataRequest\x12\x17\n" +
+	"\anode_id\x18\x01 \x01(\x04R\x06nodeId\"V\n" +
+	"\x15LeaveMetadataResponse\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage2\xf5\x02\n" +
 	"\x0eFutureQCluster\x12K\n" +
 	"\x0eGetClusterInfo\x12\x1b.futureq.ClusterInfoRequest\x1a\x1c.futureq.ClusterInfoResponse\x12:\n" +
 	"\vJoinCluster\x12\x14.futureq.JoinRequest\x1a\x15.futureq.JoinResponse\x12=\n" +
-	"\fLeaveCluster\x12\x15.futureq.LeaveRequest\x1a\x16.futureq.LeaveResponseB)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
+	"\fLeaveCluster\x12\x15.futureq.LeaveRequest\x1a\x16.futureq.LeaveResponse\x12K\n" +
+	"\fJoinMetadata\x12\x1c.futureq.JoinMetadataRequest\x1a\x1d.futureq.JoinMetadataResponse\x12N\n" +
+	"\rLeaveMetadata\x12\x1d.futureq.LeaveMetadataRequest\x1a\x1e.futureq.LeaveMetadataResponseB)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
 	file_cluster_proto_rawDescOnce sync.Once
@@ -457,29 +676,37 @@ func file_cluster_proto_rawDescGZIP() []byte {
 	return file_cluster_proto_rawDescData
 }
 
-var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_cluster_proto_goTypes = []any{
-	(*NodeInfo)(nil),            // 0: futureq.NodeInfo
-	(*ClusterInfoRequest)(nil),  // 1: futureq.ClusterInfoRequest
-	(*ClusterInfoResponse)(nil), // 2: futureq.ClusterInfoResponse
-	(*JoinRequest)(nil),         // 3: futureq.JoinRequest
-	(*JoinResponse)(nil),        // 4: futureq.JoinResponse
-	(*LeaveRequest)(nil),        // 5: futureq.LeaveRequest
-	(*LeaveResponse)(nil),       // 6: futureq.LeaveResponse
+	(*NodeInfo)(nil),              // 0: futureq.NodeInfo
+	(*ClusterInfoRequest)(nil),    // 1: futureq.ClusterInfoRequest
+	(*ClusterInfoResponse)(nil),   // 2: futureq.ClusterInfoResponse
+	(*JoinRequest)(nil),           // 3: futureq.JoinRequest
+	(*JoinResponse)(nil),          // 4: futureq.JoinResponse
+	(*LeaveRequest)(nil),          // 5: futureq.LeaveRequest
+	(*LeaveResponse)(nil),         // 6: futureq.LeaveResponse
+	(*JoinMetadataRequest)(nil),   // 7: futureq.JoinMetadataRequest
+	(*JoinMetadataResponse)(nil),  // 8: futureq.JoinMetadataResponse
+	(*LeaveMetadataRequest)(nil),  // 9: futureq.LeaveMetadataRequest
+	(*LeaveMetadataResponse)(nil), // 10: futureq.LeaveMetadataResponse
 }
 var file_cluster_proto_depIdxs = []int32{
-	0, // 0: futureq.ClusterInfoResponse.nodes:type_name -> futureq.NodeInfo
-	1, // 1: futureq.FutureQCluster.GetClusterInfo:input_type -> futureq.ClusterInfoRequest
-	3, // 2: futureq.FutureQCluster.JoinCluster:input_type -> futureq.JoinRequest
-	5, // 3: futureq.FutureQCluster.LeaveCluster:input_type -> futureq.LeaveRequest
-	2, // 4: futureq.FutureQCluster.GetClusterInfo:output_type -> futureq.ClusterInfoResponse
-	4, // 5: futureq.FutureQCluster.JoinCluster:output_type -> futureq.JoinResponse
-	6, // 6: futureq.FutureQCluster.LeaveCluster:output_type -> futureq.LeaveResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0,  // 0: futureq.ClusterInfoResponse.nodes:type_name -> futureq.NodeInfo
+	1,  // 1: futureq.FutureQCluster.GetClusterInfo:input_type -> futureq.ClusterInfoRequest
+	3,  // 2: futureq.FutureQCluster.JoinCluster:input_type -> futureq.JoinRequest
+	5,  // 3: futureq.FutureQCluster.LeaveCluster:input_type -> futureq.LeaveRequest
+	7,  // 4: futureq.FutureQCluster.JoinMetadata:input_type -> futureq.JoinMetadataRequest
+	9,  // 5: futureq.FutureQCluster.LeaveMetadata:input_type -> futureq.LeaveMetadataRequest
+	2,  // 6: futureq.FutureQCluster.GetClusterInfo:output_type -> futureq.ClusterInfoResponse
+	4,  // 7: futureq.FutureQCluster.JoinCluster:output_type -> futureq.JoinResponse
+	6,  // 8: futureq.FutureQCluster.LeaveCluster:output_type -> futureq.LeaveResponse
+	8,  // 9: futureq.FutureQCluster.JoinMetadata:output_type -> futureq.JoinMetadataResponse
+	10, // 10: futureq.FutureQCluster.LeaveMetadata:output_type -> futureq.LeaveMetadataResponse
+	6,  // [6:11] is the sub-list for method output_type
+	1,  // [1:6] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_cluster_proto_init() }
@@ -493,7 +720,7 @@ func file_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cluster_proto_rawDesc), len(file_cluster_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

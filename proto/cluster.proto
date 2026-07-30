@@ -66,6 +66,32 @@ message LeaveResponse {
     string error_message = 2;
 }
 
+// JoinMetadataRequest is sent by a node or client SDK that wishes to observe
+// the cluster topology by joining the metadata Raft group as a non-voting member.
+message JoinMetadataRequest {
+    // node_id is the unique ID of the joining observer.
+    uint64 node_id = 1;
+
+    // raft_address is the Raft (Dragonboat) listen address of the joining observer.
+    string raft_address = 2;
+}
+
+message JoinMetadataResponse {
+    bool   success       = 1;
+    string error_message = 2;
+}
+
+// LeaveMetadataRequest is sent by an observer that wishes to leave the metadata group.
+message LeaveMetadataRequest {
+    // node_id is the ID of the departing observer.
+    uint64 node_id = 1;
+}
+
+message LeaveMetadataResponse {
+    bool   success       = 1;
+    string error_message = 2;
+}
+
 service FutureQCluster {
     // GetClusterInfo returns the current cluster topology. Any node responds.
     // Clients should call this on startup and after any connection failure to
@@ -80,4 +106,12 @@ service FutureQCluster {
     // node must call this on itself (or the operator calls it remotely) before
     // shutting down to ensure a clean Raft config-change.
     rpc LeaveCluster(LeaveRequest) returns (LeaveResponse);
+
+    // JoinMetadata adds a non-voting observer to the metadata Raft group.
+    // Used by client SDKs and new broker nodes to receive real-time topology
+    // updates without participating in metadata consensus.
+    rpc JoinMetadata(JoinMetadataRequest) returns (JoinMetadataResponse);
+
+    // LeaveMetadata removes a non-voting observer from the metadata Raft group.
+    rpc LeaveMetadata(LeaveMetadataRequest) returns (LeaveMetadataResponse);
 }
