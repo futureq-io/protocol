@@ -23,22 +23,32 @@ const (
 
 // AckLevel controls how durable a batch publish must be before the broker
 // acknowledges it.
+// Integer values are ordered by durability: a broker enforcing a minimum
+// ack level can compare numerically (lower is weaker).
 type AckLevel int32
 
 const (
+	// ACK_LEVEL_QUORUM waits for the entry to be committed by a Raft quorum.
 	AckLevel_ACK_LEVEL_QUORUM AckLevel = 0
-	AckLevel_ACK_LEVEL_NO_ACK AckLevel = 1
+	// ACK_LEVEL_LEADER acks after the Raft leader has accepted the entry
+	// into its log pipeline, without waiting for quorum commit. A leader
+	// failover may lose the batch — weaker than ACK_LEVEL_QUORUM.
+	AckLevel_ACK_LEVEL_LEADER AckLevel = 1
+	// ACK_LEVEL_NO_ACK fires the proposal without waiting for any ack.
+	AckLevel_ACK_LEVEL_NO_ACK AckLevel = 2
 )
 
 // Enum value maps for AckLevel.
 var (
 	AckLevel_name = map[int32]string{
 		0: "ACK_LEVEL_QUORUM",
-		1: "ACK_LEVEL_NO_ACK",
+		1: "ACK_LEVEL_LEADER",
+		2: "ACK_LEVEL_NO_ACK",
 	}
 	AckLevel_value = map[string]int32{
 		"ACK_LEVEL_QUORUM": 0,
-		"ACK_LEVEL_NO_ACK": 1,
+		"ACK_LEVEL_LEADER": 1,
+		"ACK_LEVEL_NO_ACK": 2,
 	}
 )
 
@@ -372,10 +382,11 @@ const file_producer_proto_rawDesc = "" +
 	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"P\n" +
 	"\x0fPublishBatchAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12#\n" +
-	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*6\n" +
+	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage*L\n" +
 	"\bAckLevel\x12\x14\n" +
 	"\x10ACK_LEVEL_QUORUM\x10\x00\x12\x14\n" +
-	"\x10ACK_LEVEL_NO_ACK\x10\x012W\n" +
+	"\x10ACK_LEVEL_LEADER\x10\x01\x12\x14\n" +
+	"\x10ACK_LEVEL_NO_ACK\x10\x022W\n" +
 	"\x0fFutureQProducer\x12D\n" +
 	"\rPublishStream\x12\x15.futureq.PublishBatch\x1a\x18.futureq.PublishBatchAck(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 

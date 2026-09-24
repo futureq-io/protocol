@@ -6,9 +6,19 @@ option go_package = "github.com/futureq-io/protocol/proto/go";
 
 // AckLevel controls how durable a batch publish must be before the broker
 // acknowledges it.
+// Integer values are ordered by durability: a broker enforcing a minimum
+// ack level can compare numerically (lower is weaker).
 enum AckLevel {
+    // ACK_LEVEL_QUORUM waits for the entry to be committed by a Raft quorum.
     ACK_LEVEL_QUORUM = 0;
-    ACK_LEVEL_NO_ACK = 1;
+
+    // ACK_LEVEL_LEADER acks after the Raft leader has accepted the entry
+    // into its log pipeline, without waiting for quorum commit. A leader
+    // failover may lose the batch — weaker than ACK_LEVEL_QUORUM.
+    ACK_LEVEL_LEADER = 1;
+
+    // ACK_LEVEL_NO_ACK fires the proposal without waiting for any ack.
+    ACK_LEVEL_NO_ACK = 2;
 }
 
 message Index {
