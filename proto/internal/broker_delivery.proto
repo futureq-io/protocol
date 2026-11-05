@@ -1,0 +1,41 @@
+syntax = "proto3";
+package futureq.broker;
+
+// Broker-internal wire types; public producer/consumer RPCs are unchanged.
+option go_package = "github.com/futureq-io/protocol/proto/go/delivery";
+
+// Field numbers/types match internal.StoredMessage. Unknown fields must be
+// discarded when reading this projection, so payload/index bytes are skipped.
+message StoredMessageMetadata {
+  string topic = 1;
+  int64 enqueued_at_unix_ms = 3;
+  int64 delay_ms = 4;
+  int64 ttl_ms = 5;
+}
+// The delivery path needs the payload but does not need stored indexes.
+message StoredDeliveryMessage {
+  string topic = 1;
+  bytes payload = 2;
+  int64 enqueued_at_unix_ms = 3;
+  int64 delay_ms = 4;
+  int64 ttl_ms = 5;
+}
+// Recipients are unique and sorted. Bit i records recipient i's completion;
+// unused high bits must be zero. The roster stays frozen across epoch changes.
+message DeliveryReceipt {
+  uint64 epoch = 1;
+  repeated string recipients = 2;
+  bytes acknowledged = 3;
+}
+// A cheap projection for maintenance/startup scans.
+message DeliveryReceiptEpoch { uint64 epoch = 1; }
+message DeliveryPrepareGroup {
+  uint64 epoch = 1;
+  repeated string recipients = 2;
+  repeated bytes keys = 3;
+}
+message DeliveryPrepareBatch { repeated DeliveryPrepareGroup groups = 1; }
+message DeliveryAck { bytes key = 1; string recipient = 2; }
+message DeliveryAckBatch { repeated DeliveryAck acks = 1; }
+message DeliveryPrepared { bytes key = 1; DeliveryReceipt state = 2; }
+message DeliveryPreparedBatch { repeated DeliveryPrepared items = 1; }
