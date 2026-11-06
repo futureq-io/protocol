@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v7.35.0
-// source: internal/broker_delivery.proto
+// source: broker_delivery.proto
 
 package delivery
 
@@ -35,7 +35,7 @@ type StoredMessageMetadata struct {
 
 func (x *StoredMessageMetadata) Reset() {
 	*x = StoredMessageMetadata{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[0]
+	mi := &file_broker_delivery_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -47,7 +47,7 @@ func (x *StoredMessageMetadata) String() string {
 func (*StoredMessageMetadata) ProtoMessage() {}
 
 func (x *StoredMessageMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[0]
+	mi := &file_broker_delivery_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,7 +60,7 @@ func (x *StoredMessageMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StoredMessageMetadata.ProtoReflect.Descriptor instead.
 func (*StoredMessageMetadata) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{0}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *StoredMessageMetadata) GetTopic() string {
@@ -105,7 +105,7 @@ type StoredDeliveryMessage struct {
 
 func (x *StoredDeliveryMessage) Reset() {
 	*x = StoredDeliveryMessage{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[1]
+	mi := &file_broker_delivery_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -117,7 +117,7 @@ func (x *StoredDeliveryMessage) String() string {
 func (*StoredDeliveryMessage) ProtoMessage() {}
 
 func (x *StoredDeliveryMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[1]
+	mi := &file_broker_delivery_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -130,7 +130,7 @@ func (x *StoredDeliveryMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StoredDeliveryMessage.ProtoReflect.Descriptor instead.
 func (*StoredDeliveryMessage) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{1}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *StoredDeliveryMessage) GetTopic() string {
@@ -171,17 +171,19 @@ func (x *StoredDeliveryMessage) GetTtlMs() int64 {
 // Recipients are unique and sorted. Bit i records recipient i's completion;
 // unused high bits must be zero. The roster stays frozen across epoch changes.
 type DeliveryReceipt struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Epoch         uint64                 `protobuf:"varint,1,opt,name=epoch,proto3" json:"epoch,omitempty"`
-	Recipients    []string               `protobuf:"bytes,2,rep,name=recipients,proto3" json:"recipients,omitempty"`
-	Acknowledged  []byte                 `protobuf:"bytes,3,opt,name=acknowledged,proto3" json:"acknowledged,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Epoch        uint64                 `protobuf:"varint,1,opt,name=epoch,proto3" json:"epoch,omitempty"`
+	Recipients   []string               `protobuf:"bytes,2,rep,name=recipients,proto3" json:"recipients,omitempty"`
+	Acknowledged []byte                 `protobuf:"bytes,3,opt,name=acknowledged,proto3" json:"acknowledged,omitempty"`
+	// Destinations were committed atomically with the message at publish time.
+	PublishBound  bool `protobuf:"varint,4,opt,name=publish_bound,json=publishBound,proto3" json:"publish_bound,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DeliveryReceipt) Reset() {
 	*x = DeliveryReceipt{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[2]
+	mi := &file_broker_delivery_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -193,7 +195,7 @@ func (x *DeliveryReceipt) String() string {
 func (*DeliveryReceipt) ProtoMessage() {}
 
 func (x *DeliveryReceipt) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[2]
+	mi := &file_broker_delivery_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -206,7 +208,7 @@ func (x *DeliveryReceipt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryReceipt.ProtoReflect.Descriptor instead.
 func (*DeliveryReceipt) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{2}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *DeliveryReceipt) GetEpoch() uint64 {
@@ -230,6 +232,13 @@ func (x *DeliveryReceipt) GetAcknowledged() []byte {
 	return nil
 }
 
+func (x *DeliveryReceipt) GetPublishBound() bool {
+	if x != nil {
+		return x.PublishBound
+	}
+	return false
+}
+
 // A cheap projection for maintenance/startup scans.
 type DeliveryReceiptEpoch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -240,7 +249,7 @@ type DeliveryReceiptEpoch struct {
 
 func (x *DeliveryReceiptEpoch) Reset() {
 	*x = DeliveryReceiptEpoch{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[3]
+	mi := &file_broker_delivery_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -252,7 +261,7 @@ func (x *DeliveryReceiptEpoch) String() string {
 func (*DeliveryReceiptEpoch) ProtoMessage() {}
 
 func (x *DeliveryReceiptEpoch) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[3]
+	mi := &file_broker_delivery_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -265,7 +274,7 @@ func (x *DeliveryReceiptEpoch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryReceiptEpoch.ProtoReflect.Descriptor instead.
 func (*DeliveryReceiptEpoch) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{3}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DeliveryReceiptEpoch) GetEpoch() uint64 {
@@ -286,7 +295,7 @@ type DeliveryPrepareGroup struct {
 
 func (x *DeliveryPrepareGroup) Reset() {
 	*x = DeliveryPrepareGroup{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[4]
+	mi := &file_broker_delivery_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -298,7 +307,7 @@ func (x *DeliveryPrepareGroup) String() string {
 func (*DeliveryPrepareGroup) ProtoMessage() {}
 
 func (x *DeliveryPrepareGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[4]
+	mi := &file_broker_delivery_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -311,7 +320,7 @@ func (x *DeliveryPrepareGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPrepareGroup.ProtoReflect.Descriptor instead.
 func (*DeliveryPrepareGroup) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{4}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeliveryPrepareGroup) GetEpoch() uint64 {
@@ -344,7 +353,7 @@ type DeliveryPrepareBatch struct {
 
 func (x *DeliveryPrepareBatch) Reset() {
 	*x = DeliveryPrepareBatch{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[5]
+	mi := &file_broker_delivery_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -356,7 +365,7 @@ func (x *DeliveryPrepareBatch) String() string {
 func (*DeliveryPrepareBatch) ProtoMessage() {}
 
 func (x *DeliveryPrepareBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[5]
+	mi := &file_broker_delivery_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -369,7 +378,7 @@ func (x *DeliveryPrepareBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPrepareBatch.ProtoReflect.Descriptor instead.
 func (*DeliveryPrepareBatch) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{5}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *DeliveryPrepareBatch) GetGroups() []*DeliveryPrepareGroup {
@@ -389,7 +398,7 @@ type DeliveryAck struct {
 
 func (x *DeliveryAck) Reset() {
 	*x = DeliveryAck{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[6]
+	mi := &file_broker_delivery_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -401,7 +410,7 @@ func (x *DeliveryAck) String() string {
 func (*DeliveryAck) ProtoMessage() {}
 
 func (x *DeliveryAck) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[6]
+	mi := &file_broker_delivery_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -414,7 +423,7 @@ func (x *DeliveryAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryAck.ProtoReflect.Descriptor instead.
 func (*DeliveryAck) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{6}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DeliveryAck) GetKey() []byte {
@@ -440,7 +449,7 @@ type DeliveryAckBatch struct {
 
 func (x *DeliveryAckBatch) Reset() {
 	*x = DeliveryAckBatch{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[7]
+	mi := &file_broker_delivery_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -452,7 +461,7 @@ func (x *DeliveryAckBatch) String() string {
 func (*DeliveryAckBatch) ProtoMessage() {}
 
 func (x *DeliveryAckBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[7]
+	mi := &file_broker_delivery_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -465,7 +474,7 @@ func (x *DeliveryAckBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryAckBatch.ProtoReflect.Descriptor instead.
 func (*DeliveryAckBatch) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{7}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *DeliveryAckBatch) GetAcks() []*DeliveryAck {
@@ -485,7 +494,7 @@ type DeliveryPrepared struct {
 
 func (x *DeliveryPrepared) Reset() {
 	*x = DeliveryPrepared{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[8]
+	mi := &file_broker_delivery_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -497,7 +506,7 @@ func (x *DeliveryPrepared) String() string {
 func (*DeliveryPrepared) ProtoMessage() {}
 
 func (x *DeliveryPrepared) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[8]
+	mi := &file_broker_delivery_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +519,7 @@ func (x *DeliveryPrepared) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPrepared.ProtoReflect.Descriptor instead.
 func (*DeliveryPrepared) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{8}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeliveryPrepared) GetKey() []byte {
@@ -536,7 +545,7 @@ type DeliveryPreparedBatch struct {
 
 func (x *DeliveryPreparedBatch) Reset() {
 	*x = DeliveryPreparedBatch{}
-	mi := &file_internal_broker_delivery_proto_msgTypes[9]
+	mi := &file_broker_delivery_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +557,7 @@ func (x *DeliveryPreparedBatch) String() string {
 func (*DeliveryPreparedBatch) ProtoMessage() {}
 
 func (x *DeliveryPreparedBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_internal_broker_delivery_proto_msgTypes[9]
+	mi := &file_broker_delivery_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +570,7 @@ func (x *DeliveryPreparedBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeliveryPreparedBatch.ProtoReflect.Descriptor instead.
 func (*DeliveryPreparedBatch) Descriptor() ([]byte, []int) {
-	return file_internal_broker_delivery_proto_rawDescGZIP(), []int{9}
+	return file_broker_delivery_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeliveryPreparedBatch) GetItems() []*DeliveryPrepared {
@@ -571,11 +580,267 @@ func (x *DeliveryPreparedBatch) GetItems() []*DeliveryPrepared {
 	return nil
 }
 
-var File_internal_broker_delivery_proto protoreflect.FileDescriptor
+// Durable subscriptions use generation-specific recipients. Sessions are leases:
+// an unclean broker exit must eventually count as a disconnected subscription.
+type SubscriptionRecord struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Topic               string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	GroupId             string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	SubscriberId        string                 `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	Recipient           string                 `protobuf:"bytes,4,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	Active              bool                   `protobuf:"varint,5,opt,name=active,proto3" json:"active,omitempty"`
+	DisconnectedSinceMs int64                  `protobuf:"varint,6,opt,name=disconnected_since_ms,json=disconnectedSinceMs,proto3" json:"disconnected_since_ms,omitempty"`
+	Sessions            map[string]int64       `protobuf:"bytes,7,rep,name=sessions,proto3" json:"sessions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
 
-const file_internal_broker_delivery_proto_rawDesc = "" +
+func (x *SubscriptionRecord) Reset() {
+	*x = SubscriptionRecord{}
+	mi := &file_broker_delivery_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionRecord) ProtoMessage() {}
+
+func (x *SubscriptionRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_broker_delivery_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionRecord.ProtoReflect.Descriptor instead.
+func (*SubscriptionRecord) Descriptor() ([]byte, []int) {
+	return file_broker_delivery_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SubscriptionRecord) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *SubscriptionRecord) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *SubscriptionRecord) GetSubscriberId() string {
+	if x != nil {
+		return x.SubscriberId
+	}
+	return ""
+}
+
+func (x *SubscriptionRecord) GetRecipient() string {
+	if x != nil {
+		return x.Recipient
+	}
+	return ""
+}
+
+func (x *SubscriptionRecord) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *SubscriptionRecord) GetDisconnectedSinceMs() int64 {
+	if x != nil {
+		return x.DisconnectedSinceMs
+	}
+	return 0
+}
+
+func (x *SubscriptionRecord) GetSessions() map[string]int64 {
+	if x != nil {
+		return x.Sessions
+	}
+	return nil
+}
+
+type SubscriptionMutation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Topic         string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	SubscriberId  string                 `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	Recipient     string                 `protobuf:"bytes,4,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	Session       string                 `protobuf:"bytes,5,opt,name=session,proto3" json:"session,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscriptionMutation) Reset() {
+	*x = SubscriptionMutation{}
+	mi := &file_broker_delivery_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionMutation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionMutation) ProtoMessage() {}
+
+func (x *SubscriptionMutation) ProtoReflect() protoreflect.Message {
+	mi := &file_broker_delivery_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionMutation.ProtoReflect.Descriptor instead.
+func (*SubscriptionMutation) Descriptor() ([]byte, []int) {
+	return file_broker_delivery_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SubscriptionMutation) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *SubscriptionMutation) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *SubscriptionMutation) GetSubscriberId() string {
+	if x != nil {
+		return x.SubscriberId
+	}
+	return ""
+}
+
+func (x *SubscriptionMutation) GetRecipient() string {
+	if x != nil {
+		return x.Recipient
+	}
+	return ""
+}
+
+func (x *SubscriptionMutation) GetSession() string {
+	if x != nil {
+		return x.Session
+	}
+	return ""
+}
+
+type SubscriptionCommand struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 1=create, 2=unsubscribe, 3=connect, 4=disconnect, 5=renew,
+	// 6=expire disconnected, 7=clean retired recipients from receipts.
+	Operation     uint32                  `protobuf:"varint,1,opt,name=operation,proto3" json:"operation,omitempty"`
+	NowMs         int64                   `protobuf:"varint,2,opt,name=now_ms,json=nowMs,proto3" json:"now_ms,omitempty"`
+	LeaseMs       int64                   `protobuf:"varint,3,opt,name=lease_ms,json=leaseMs,proto3" json:"lease_ms,omitempty"`
+	IdleTimeoutMs int64                   `protobuf:"varint,4,opt,name=idle_timeout_ms,json=idleTimeoutMs,proto3" json:"idle_timeout_ms,omitempty"`
+	Mutations     []*SubscriptionMutation `protobuf:"bytes,5,rep,name=mutations,proto3" json:"mutations,omitempty"`
+	Keys          [][]byte                `protobuf:"bytes,6,rep,name=keys,proto3" json:"keys,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscriptionCommand) Reset() {
+	*x = SubscriptionCommand{}
+	mi := &file_broker_delivery_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionCommand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionCommand) ProtoMessage() {}
+
+func (x *SubscriptionCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_broker_delivery_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionCommand.ProtoReflect.Descriptor instead.
+func (*SubscriptionCommand) Descriptor() ([]byte, []int) {
+	return file_broker_delivery_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SubscriptionCommand) GetOperation() uint32 {
+	if x != nil {
+		return x.Operation
+	}
+	return 0
+}
+
+func (x *SubscriptionCommand) GetNowMs() int64 {
+	if x != nil {
+		return x.NowMs
+	}
+	return 0
+}
+
+func (x *SubscriptionCommand) GetLeaseMs() int64 {
+	if x != nil {
+		return x.LeaseMs
+	}
+	return 0
+}
+
+func (x *SubscriptionCommand) GetIdleTimeoutMs() int64 {
+	if x != nil {
+		return x.IdleTimeoutMs
+	}
+	return 0
+}
+
+func (x *SubscriptionCommand) GetMutations() []*SubscriptionMutation {
+	if x != nil {
+		return x.Mutations
+	}
+	return nil
+}
+
+func (x *SubscriptionCommand) GetKeys() [][]byte {
+	if x != nil {
+		return x.Keys
+	}
+	return nil
+}
+
+var File_broker_delivery_proto protoreflect.FileDescriptor
+
+const file_broker_delivery_proto_rawDesc = "" +
 	"\n" +
-	"\x1einternal/broker_delivery.proto\x12\x0efutureq.broker\"\x8e\x01\n" +
+	"\x15broker_delivery.proto\x12\x0efutureq.broker\"\x8e\x01\n" +
 	"\x15StoredMessageMetadata\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12-\n" +
 	"\x13enqueued_at_unix_ms\x18\x03 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
@@ -586,13 +851,14 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12-\n" +
 	"\x13enqueued_at_unix_ms\x18\x03 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
 	"\bdelay_ms\x18\x04 \x01(\x03R\adelayMs\x12\x15\n" +
-	"\x06ttl_ms\x18\x05 \x01(\x03R\x05ttlMs\"k\n" +
+	"\x06ttl_ms\x18\x05 \x01(\x03R\x05ttlMs\"\x90\x01\n" +
 	"\x0fDeliveryReceipt\x12\x14\n" +
 	"\x05epoch\x18\x01 \x01(\x04R\x05epoch\x12\x1e\n" +
 	"\n" +
 	"recipients\x18\x02 \x03(\tR\n" +
 	"recipients\x12\"\n" +
-	"\facknowledged\x18\x03 \x01(\fR\facknowledged\",\n" +
+	"\facknowledged\x18\x03 \x01(\fR\facknowledged\x12#\n" +
+	"\rpublish_bound\x18\x04 \x01(\bR\fpublishBound\",\n" +
 	"\x14DeliveryReceiptEpoch\x12\x14\n" +
 	"\x05epoch\x18\x01 \x01(\x04R\x05epoch\"`\n" +
 	"\x14DeliveryPrepareGroup\x12\x14\n" +
@@ -612,22 +878,46 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\fR\x03key\x125\n" +
 	"\x05state\x18\x02 \x01(\v2\x1f.futureq.broker.DeliveryReceiptR\x05state\"O\n" +
 	"\x15DeliveryPreparedBatch\x126\n" +
-	"\x05items\x18\x01 \x03(\v2 .futureq.broker.DeliveryPreparedR\x05itemsB2Z0github.com/futureq-io/protocol/proto/go/deliveryb\x06proto3"
+	"\x05items\x18\x01 \x03(\v2 .futureq.broker.DeliveryPreparedR\x05items\"\xdf\x02\n" +
+	"\x12SubscriptionRecord\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\x12\x1c\n" +
+	"\trecipient\x18\x04 \x01(\tR\trecipient\x12\x16\n" +
+	"\x06active\x18\x05 \x01(\bR\x06active\x122\n" +
+	"\x15disconnected_since_ms\x18\x06 \x01(\x03R\x13disconnectedSinceMs\x12L\n" +
+	"\bsessions\x18\a \x03(\v20.futureq.broker.SubscriptionRecord.SessionsEntryR\bsessions\x1a;\n" +
+	"\rSessionsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\"\xa4\x01\n" +
+	"\x14SubscriptionMutation\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\x12\x1c\n" +
+	"\trecipient\x18\x04 \x01(\tR\trecipient\x12\x18\n" +
+	"\asession\x18\x05 \x01(\tR\asession\"\xe5\x01\n" +
+	"\x13SubscriptionCommand\x12\x1c\n" +
+	"\toperation\x18\x01 \x01(\rR\toperation\x12\x15\n" +
+	"\x06now_ms\x18\x02 \x01(\x03R\x05nowMs\x12\x19\n" +
+	"\blease_ms\x18\x03 \x01(\x03R\aleaseMs\x12&\n" +
+	"\x0fidle_timeout_ms\x18\x04 \x01(\x03R\ridleTimeoutMs\x12B\n" +
+	"\tmutations\x18\x05 \x03(\v2$.futureq.broker.SubscriptionMutationR\tmutations\x12\x12\n" +
+	"\x04keys\x18\x06 \x03(\fR\x04keysB2Z0github.com/futureq-io/protocol/proto/go/deliveryb\x06proto3"
 
 var (
-	file_internal_broker_delivery_proto_rawDescOnce sync.Once
-	file_internal_broker_delivery_proto_rawDescData []byte
+	file_broker_delivery_proto_rawDescOnce sync.Once
+	file_broker_delivery_proto_rawDescData []byte
 )
 
-func file_internal_broker_delivery_proto_rawDescGZIP() []byte {
-	file_internal_broker_delivery_proto_rawDescOnce.Do(func() {
-		file_internal_broker_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_internal_broker_delivery_proto_rawDesc), len(file_internal_broker_delivery_proto_rawDesc)))
+func file_broker_delivery_proto_rawDescGZIP() []byte {
+	file_broker_delivery_proto_rawDescOnce.Do(func() {
+		file_broker_delivery_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_broker_delivery_proto_rawDesc), len(file_broker_delivery_proto_rawDesc)))
 	})
-	return file_internal_broker_delivery_proto_rawDescData
+	return file_broker_delivery_proto_rawDescData
 }
 
-var file_internal_broker_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
-var file_internal_broker_delivery_proto_goTypes = []any{
+var file_broker_delivery_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_broker_delivery_proto_goTypes = []any{
 	(*StoredMessageMetadata)(nil), // 0: futureq.broker.StoredMessageMetadata
 	(*StoredDeliveryMessage)(nil), // 1: futureq.broker.StoredDeliveryMessage
 	(*DeliveryReceipt)(nil),       // 2: futureq.broker.DeliveryReceipt
@@ -638,39 +928,45 @@ var file_internal_broker_delivery_proto_goTypes = []any{
 	(*DeliveryAckBatch)(nil),      // 7: futureq.broker.DeliveryAckBatch
 	(*DeliveryPrepared)(nil),      // 8: futureq.broker.DeliveryPrepared
 	(*DeliveryPreparedBatch)(nil), // 9: futureq.broker.DeliveryPreparedBatch
+	(*SubscriptionRecord)(nil),    // 10: futureq.broker.SubscriptionRecord
+	(*SubscriptionMutation)(nil),  // 11: futureq.broker.SubscriptionMutation
+	(*SubscriptionCommand)(nil),   // 12: futureq.broker.SubscriptionCommand
+	nil,                           // 13: futureq.broker.SubscriptionRecord.SessionsEntry
 }
-var file_internal_broker_delivery_proto_depIdxs = []int32{
-	4, // 0: futureq.broker.DeliveryPrepareBatch.groups:type_name -> futureq.broker.DeliveryPrepareGroup
-	6, // 1: futureq.broker.DeliveryAckBatch.acks:type_name -> futureq.broker.DeliveryAck
-	2, // 2: futureq.broker.DeliveryPrepared.state:type_name -> futureq.broker.DeliveryReceipt
-	8, // 3: futureq.broker.DeliveryPreparedBatch.items:type_name -> futureq.broker.DeliveryPrepared
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+var file_broker_delivery_proto_depIdxs = []int32{
+	4,  // 0: futureq.broker.DeliveryPrepareBatch.groups:type_name -> futureq.broker.DeliveryPrepareGroup
+	6,  // 1: futureq.broker.DeliveryAckBatch.acks:type_name -> futureq.broker.DeliveryAck
+	2,  // 2: futureq.broker.DeliveryPrepared.state:type_name -> futureq.broker.DeliveryReceipt
+	8,  // 3: futureq.broker.DeliveryPreparedBatch.items:type_name -> futureq.broker.DeliveryPrepared
+	13, // 4: futureq.broker.SubscriptionRecord.sessions:type_name -> futureq.broker.SubscriptionRecord.SessionsEntry
+	11, // 5: futureq.broker.SubscriptionCommand.mutations:type_name -> futureq.broker.SubscriptionMutation
+	6,  // [6:6] is the sub-list for method output_type
+	6,  // [6:6] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
-func init() { file_internal_broker_delivery_proto_init() }
-func file_internal_broker_delivery_proto_init() {
-	if File_internal_broker_delivery_proto != nil {
+func init() { file_broker_delivery_proto_init() }
+func file_broker_delivery_proto_init() {
+	if File_broker_delivery_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_internal_broker_delivery_proto_rawDesc), len(file_internal_broker_delivery_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_broker_delivery_proto_rawDesc), len(file_broker_delivery_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_internal_broker_delivery_proto_goTypes,
-		DependencyIndexes: file_internal_broker_delivery_proto_depIdxs,
-		MessageInfos:      file_internal_broker_delivery_proto_msgTypes,
+		GoTypes:           file_broker_delivery_proto_goTypes,
+		DependencyIndexes: file_broker_delivery_proto_depIdxs,
+		MessageInfos:      file_broker_delivery_proto_msgTypes,
 	}.Build()
-	File_internal_broker_delivery_proto = out.File
-	file_internal_broker_delivery_proto_goTypes = nil
-	file_internal_broker_delivery_proto_depIdxs = nil
+	File_broker_delivery_proto = out.File
+	file_broker_delivery_proto_goTypes = nil
+	file_broker_delivery_proto_depIdxs = nil
 }

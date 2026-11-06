@@ -22,7 +22,7 @@ const (
 )
 
 // SubscribeInit is the first frame that a consumer must send on the Subscribe
-// stream. It declares the topic and consumer group for this connection.
+// stream. It binds a worker to a previously created durable subscription.
 type SubscribeInit struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// topic is the name of the channel to subscribe to.
@@ -31,7 +31,10 @@ type SubscribeInit struct {
 	// group_id compete for messages (one delivery per group). Different
 	// group_ids on the same topic each receive an independent copy of every
 	// message (fan-out).
-	GroupId       string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	// Stable identity for an independent universal subscription. Set exactly
+	// one of group_id and subscriber_id. CreateSubscription must precede this stream.
+	SubscriberId  string `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -80,10 +83,18 @@ func (x *SubscribeInit) GetGroupId() string {
 	return ""
 }
 
+func (x *SubscribeInit) GetSubscriberId() string {
+	if x != nil {
+		return x.SubscriberId
+	}
+	return ""
+}
+
 // AckRequest is sent by the consumer to acknowledge or reject a message.
 type AckRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// success=true: message was processed; the broker will delete it.
+	// success=true completes this subscription's delivery. The shared message
+	// is deleted only after all destination subscriptions finish.
 	// success=false: message was rejected (NACK); the broker will re-dispatch
 	//
 	//	it to another consumer on the next dispatcher tick.
@@ -308,14 +319,182 @@ func (x *QueueMessage) GetDelayMs() int64 {
 	return 0
 }
 
+// A durable interest, independent of any network connection. Exactly one of
+// group_id (competing workers) and subscriber_id (independent fan-out) is required.
+type SubscriptionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Topic         string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	GroupId       string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	SubscriberId  string                 `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscriptionRequest) Reset() {
+	*x = SubscriptionRequest{}
+	mi := &file_consumer_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionRequest) ProtoMessage() {}
+
+func (x *SubscriptionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_consumer_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionRequest.ProtoReflect.Descriptor instead.
+func (*SubscriptionRequest) Descriptor() ([]byte, []int) {
+	return file_consumer_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *SubscriptionRequest) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *SubscriptionRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *SubscriptionRequest) GetSubscriberId() string {
+	if x != nil {
+		return x.SubscriberId
+	}
+	return ""
+}
+
+type SubscriptionResponse struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Topic        string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	GroupId      string                 `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	SubscriberId string                 `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	// Changes after deletion/recreation; connections bind to one generation.
+	Generation    string `protobuf:"bytes,4,opt,name=generation,proto3" json:"generation,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubscriptionResponse) Reset() {
+	*x = SubscriptionResponse{}
+	mi := &file_consumer_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubscriptionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscriptionResponse) ProtoMessage() {}
+
+func (x *SubscriptionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_consumer_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscriptionResponse.ProtoReflect.Descriptor instead.
+func (*SubscriptionResponse) Descriptor() ([]byte, []int) {
+	return file_consumer_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SubscriptionResponse) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
+func (x *SubscriptionResponse) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *SubscriptionResponse) GetSubscriberId() string {
+	if x != nil {
+		return x.SubscriberId
+	}
+	return ""
+}
+
+func (x *SubscriptionResponse) GetGeneration() string {
+	if x != nil {
+		return x.Generation
+	}
+	return ""
+}
+
+type UnsubscribeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UnsubscribeResponse) Reset() {
+	*x = UnsubscribeResponse{}
+	mi := &file_consumer_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnsubscribeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnsubscribeResponse) ProtoMessage() {}
+
+func (x *UnsubscribeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_consumer_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnsubscribeResponse.ProtoReflect.Descriptor instead.
+func (*UnsubscribeResponse) Descriptor() ([]byte, []int) {
+	return file_consumer_proto_rawDescGZIP(), []int{6}
+}
+
 var File_consumer_proto protoreflect.FileDescriptor
 
 const file_consumer_proto_rawDesc = "" +
 	"\n" +
-	"\x0econsumer.proto\x12\afutureq\"@\n" +
+	"\x0econsumer.proto\x12\afutureq\"e\n" +
 	"\rSubscribeInit\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
-	"\bgroup_id\x18\x02 \x01(\tR\agroupId\"I\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\"I\n" +
 	"\n" +
 	"AckRequest\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
@@ -329,8 +508,22 @@ const file_consumer_proto_rawDesc = "" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12!\n" +
 	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag\x12-\n" +
 	"\x13enqueued_at_unix_ms\x18\x04 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
-	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs2Q\n" +
-	"\x0fFutureQConsumer\x12>\n" +
+	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs\"k\n" +
+	"\x13SubscriptionRequest\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\"\x8c\x01\n" +
+	"\x14SubscriptionResponse\x12\x14\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
+	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\x12\x1e\n" +
+	"\n" +
+	"generation\x18\x04 \x01(\tR\n" +
+	"generation\"\x15\n" +
+	"\x13UnsubscribeResponse2\xef\x01\n" +
+	"\x0fFutureQConsumer\x12Q\n" +
+	"\x12CreateSubscription\x12\x1c.futureq.SubscriptionRequest\x1a\x1d.futureq.SubscriptionResponse\x12I\n" +
+	"\vUnsubscribe\x12\x1c.futureq.SubscriptionRequest\x1a\x1c.futureq.UnsubscribeResponse\x12>\n" +
 	"\tSubscribe\x12\x16.futureq.ConsumerFrame\x1a\x15.futureq.QueueMessage(\x010\x01B)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
@@ -345,20 +538,27 @@ func file_consumer_proto_rawDescGZIP() []byte {
 	return file_consumer_proto_rawDescData
 }
 
-var file_consumer_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_consumer_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_consumer_proto_goTypes = []any{
-	(*SubscribeInit)(nil), // 0: futureq.SubscribeInit
-	(*AckRequest)(nil),    // 1: futureq.AckRequest
-	(*ConsumerFrame)(nil), // 2: futureq.ConsumerFrame
-	(*QueueMessage)(nil),  // 3: futureq.QueueMessage
+	(*SubscribeInit)(nil),        // 0: futureq.SubscribeInit
+	(*AckRequest)(nil),           // 1: futureq.AckRequest
+	(*ConsumerFrame)(nil),        // 2: futureq.ConsumerFrame
+	(*QueueMessage)(nil),         // 3: futureq.QueueMessage
+	(*SubscriptionRequest)(nil),  // 4: futureq.SubscriptionRequest
+	(*SubscriptionResponse)(nil), // 5: futureq.SubscriptionResponse
+	(*UnsubscribeResponse)(nil),  // 6: futureq.UnsubscribeResponse
 }
 var file_consumer_proto_depIdxs = []int32{
 	0, // 0: futureq.ConsumerFrame.init:type_name -> futureq.SubscribeInit
 	1, // 1: futureq.ConsumerFrame.ack:type_name -> futureq.AckRequest
-	2, // 2: futureq.FutureQConsumer.Subscribe:input_type -> futureq.ConsumerFrame
-	3, // 3: futureq.FutureQConsumer.Subscribe:output_type -> futureq.QueueMessage
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
+	4, // 2: futureq.FutureQConsumer.CreateSubscription:input_type -> futureq.SubscriptionRequest
+	4, // 3: futureq.FutureQConsumer.Unsubscribe:input_type -> futureq.SubscriptionRequest
+	2, // 4: futureq.FutureQConsumer.Subscribe:input_type -> futureq.ConsumerFrame
+	5, // 5: futureq.FutureQConsumer.CreateSubscription:output_type -> futureq.SubscriptionResponse
+	6, // 6: futureq.FutureQConsumer.Unsubscribe:output_type -> futureq.UnsubscribeResponse
+	3, // 7: futureq.FutureQConsumer.Subscribe:output_type -> futureq.QueueMessage
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
 	2, // [2:2] is the sub-list for extension extendee
 	0, // [0:2] is the sub-list for field type_name
@@ -379,7 +579,7 @@ func file_consumer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_consumer_proto_rawDesc), len(file_consumer_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

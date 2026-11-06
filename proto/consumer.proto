@@ -5,7 +5,7 @@ package futureq;
 option go_package = "github.com/futureq-io/protocol/proto/go";
 
 // SubscribeInit is the first frame that a consumer must send on the Subscribe
-// stream. It declares the topic and consumer group for this connection.
+// stream. It binds a worker to a previously created durable subscription.
 message SubscribeInit {
     // topic is the name of the channel to subscribe to.
     string topic    = 1;
@@ -16,11 +16,16 @@ message SubscribeInit {
     // message (fan-out).
     string group_id = 2;
 
+    // Stable identity for an independent universal subscription. Set exactly
+    // one of group_id and subscriber_id. CreateSubscription must precede this stream.
+    string subscriber_id = 3;
+
 }
 
 // AckRequest is sent by the consumer to acknowledge or reject a message.
 message AckRequest {
-    // success=true: message was processed; the broker will delete it.
+    // success=true completes this subscription's delivery. The shared message
+    // is deleted only after all destination subscriptions finish.
     // success=false: message was rejected (NACK); the broker will re-dispatch
     //   it to another consumer on the next dispatcher tick.
     bool  success      = 1;
@@ -60,7 +65,28 @@ message QueueMessage {
     int64  delay_ms = 5;
 }
 
+// A durable interest, independent of any network connection. Exactly one of
+// group_id (competing workers) and subscriber_id (independent fan-out) is required.
+message SubscriptionRequest {
+    string topic = 1;
+    string group_id = 2;
+    string subscriber_id = 3;
+}
+message SubscriptionResponse {
+    string topic = 1;
+    string group_id = 2;
+    string subscriber_id = 3;
+    // Changes after deletion/recreation; connections bind to one generation.
+    string generation = 4;
+}
+message UnsubscribeResponse {}
+
 service FutureQConsumer {
+    // Idempotently declares durable interest without opening a consumer stream.
+    rpc CreateSubscription(SubscriptionRequest) returns (SubscriptionResponse);
+    // Stops future routing and discards this subscription's pending deliveries.
+    // Backlog cleanup is asynchronous; other subscriptions are unaffected.
+    rpc Unsubscribe(SubscriptionRequest) returns (UnsubscribeResponse);
     // Subscribe is a bidirectional streaming RPC. The client sends a
     // ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
     // AckRequest). The server pushes QueueMessage frames whenever messages

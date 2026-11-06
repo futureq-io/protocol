@@ -1,7 +1,7 @@
 syntax = "proto3";
 package futureq.broker;
 
-// Broker-internal wire types; public producer/consumer RPCs are unchanged.
+// Broker-internal persisted and replicated wire types.
 option go_package = "github.com/futureq-io/protocol/proto/go/delivery";
 
 // Field numbers/types match internal.StoredMessage. Unknown fields must be
@@ -26,6 +26,8 @@ message DeliveryReceipt {
   uint64 epoch = 1;
   repeated string recipients = 2;
   bytes acknowledged = 3;
+  // Destinations were committed atomically with the message at publish time.
+  bool publish_bound = 4;
 }
 // A cheap projection for maintenance/startup scans.
 message DeliveryReceiptEpoch { uint64 epoch = 1; }
@@ -39,3 +41,32 @@ message DeliveryAck { bytes key = 1; string recipient = 2; }
 message DeliveryAckBatch { repeated DeliveryAck acks = 1; }
 message DeliveryPrepared { bytes key = 1; DeliveryReceipt state = 2; }
 message DeliveryPreparedBatch { repeated DeliveryPrepared items = 1; }
+
+// Durable subscriptions use generation-specific recipients. Sessions are leases:
+// an unclean broker exit must eventually count as a disconnected subscription.
+message SubscriptionRecord {
+  string topic = 1;
+  string group_id = 2;
+  string subscriber_id = 3;
+  string recipient = 4;
+  bool active = 5;
+  int64 disconnected_since_ms = 6;
+  map<string, int64> sessions = 7;
+}
+message SubscriptionMutation {
+  string topic = 1;
+  string group_id = 2;
+  string subscriber_id = 3;
+  string recipient = 4;
+  string session = 5;
+}
+message SubscriptionCommand {
+  // 1=create, 2=unsubscribe, 3=connect, 4=disconnect, 5=renew,
+  // 6=expire disconnected, 7=clean retired recipients from receipts.
+  uint32 operation = 1;
+  int64 now_ms = 2;
+  int64 lease_ms = 3;
+  int64 idle_timeout_ms = 4;
+  repeated SubscriptionMutation mutations = 5;
+  repeated bytes keys = 6;
+}

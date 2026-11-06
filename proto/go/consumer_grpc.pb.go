@@ -19,13 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FutureQConsumer_Subscribe_FullMethodName = "/futureq.FutureQConsumer/Subscribe"
+	FutureQConsumer_CreateSubscription_FullMethodName = "/futureq.FutureQConsumer/CreateSubscription"
+	FutureQConsumer_Unsubscribe_FullMethodName        = "/futureq.FutureQConsumer/Unsubscribe"
+	FutureQConsumer_Subscribe_FullMethodName          = "/futureq.FutureQConsumer/Subscribe"
 )
 
 // FutureQConsumerClient is the client API for FutureQConsumer service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FutureQConsumerClient interface {
+	// Idempotently declares durable interest without opening a consumer stream.
+	CreateSubscription(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (*SubscriptionResponse, error)
+	// Stops future routing and discards this subscription's pending deliveries.
+	// Backlog cleanup is asynchronous; other subscriptions are unaffected.
+	Unsubscribe(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (*UnsubscribeResponse, error)
 	// Subscribe is a bidirectional streaming RPC. The client sends a
 	// ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
 	// AckRequest). The server pushes QueueMessage frames whenever messages
@@ -39,6 +46,26 @@ type futureQConsumerClient struct {
 
 func NewFutureQConsumerClient(cc grpc.ClientConnInterface) FutureQConsumerClient {
 	return &futureQConsumerClient{cc}
+}
+
+func (c *futureQConsumerClient) CreateSubscription(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (*SubscriptionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SubscriptionResponse)
+	err := c.cc.Invoke(ctx, FutureQConsumer_CreateSubscription_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *futureQConsumerClient) Unsubscribe(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (*UnsubscribeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnsubscribeResponse)
+	err := c.cc.Invoke(ctx, FutureQConsumer_Unsubscribe_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *futureQConsumerClient) Subscribe(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ConsumerFrame, QueueMessage], error) {
@@ -58,6 +85,11 @@ type FutureQConsumer_SubscribeClient = grpc.BidiStreamingClient[ConsumerFrame, Q
 // All implementations must embed UnimplementedFutureQConsumerServer
 // for forward compatibility.
 type FutureQConsumerServer interface {
+	// Idempotently declares durable interest without opening a consumer stream.
+	CreateSubscription(context.Context, *SubscriptionRequest) (*SubscriptionResponse, error)
+	// Stops future routing and discards this subscription's pending deliveries.
+	// Backlog cleanup is asynchronous; other subscriptions are unaffected.
+	Unsubscribe(context.Context, *SubscriptionRequest) (*UnsubscribeResponse, error)
 	// Subscribe is a bidirectional streaming RPC. The client sends a
 	// ConsumerFrame stream (first frame = SubscribeInit, subsequent frames =
 	// AckRequest). The server pushes QueueMessage frames whenever messages
@@ -73,6 +105,12 @@ type FutureQConsumerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFutureQConsumerServer struct{}
 
+func (UnimplementedFutureQConsumerServer) CreateSubscription(context.Context, *SubscriptionRequest) (*SubscriptionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSubscription not implemented")
+}
+func (UnimplementedFutureQConsumerServer) Unsubscribe(context.Context, *SubscriptionRequest) (*UnsubscribeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Unsubscribe not implemented")
+}
 func (UnimplementedFutureQConsumerServer) Subscribe(grpc.BidiStreamingServer[ConsumerFrame, QueueMessage]) error {
 	return status.Error(codes.Unimplemented, "method Subscribe not implemented")
 }
@@ -97,6 +135,42 @@ func RegisterFutureQConsumerServer(s grpc.ServiceRegistrar, srv FutureQConsumerS
 	s.RegisterService(&FutureQConsumer_ServiceDesc, srv)
 }
 
+func _FutureQConsumer_CreateSubscription_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FutureQConsumerServer).CreateSubscription(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FutureQConsumer_CreateSubscription_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FutureQConsumerServer).CreateSubscription(ctx, req.(*SubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FutureQConsumer_Unsubscribe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FutureQConsumerServer).Unsubscribe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FutureQConsumer_Unsubscribe_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FutureQConsumerServer).Unsubscribe(ctx, req.(*SubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FutureQConsumer_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(FutureQConsumerServer).Subscribe(&grpc.GenericServerStream[ConsumerFrame, QueueMessage]{ServerStream: stream})
 }
@@ -110,7 +184,16 @@ type FutureQConsumer_SubscribeServer = grpc.BidiStreamingServer[ConsumerFrame, Q
 var FutureQConsumer_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "futureq.FutureQConsumer",
 	HandlerType: (*FutureQConsumerServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateSubscription",
+			Handler:    _FutureQConsumer_CreateSubscription_Handler,
+		},
+		{
+			MethodName: "Unsubscribe",
+			Handler:    _FutureQConsumer_Unsubscribe_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Subscribe",
