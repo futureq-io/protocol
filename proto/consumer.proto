@@ -20,9 +20,18 @@ message SubscribeInit {
     // one of group_id and subscriber_id. CreateSubscription must precede this stream.
     string subscriber_id = 3;
 
+    // Opt in to broker-side acknowledgment after each successful stream send.
+    // Defaults to false (manual ACK/NACK). This is per worker connection, not
+    // durable subscription state. The broker may reject it with PermissionDenied.
+    // When accepted, initial metadata includes subscription-auto-ack: true;
+    // clients must require that confirmation before suppressing ACK/NACK frames.
+    // Handler failures cannot request redelivery; a crash before completion is
+    // persisted may still cause duplicates. Other recipients are unaffected.
+    bool auto_ack = 4;
 }
 
 // AckRequest is sent by the consumer to acknowledge or reject a message.
+// Brokers ignore both ACKs and NACKs on streams bound with auto_ack=true.
 message AckRequest {
     // success=true completes this subscription's delivery. The shared message
     // is deleted only after all destination subscriptions finish.
@@ -54,7 +63,7 @@ message QueueMessage {
     bytes  payload      = 2;
 
     // delivery_tag is an opaque server-assigned identifier (the raw Pebble
-    // key). The consumer must echo this in AckRequest.delivery_tag.
+    // key). Manual-ack consumers must echo this in AckRequest.delivery_tag.
     bytes  delivery_tag = 3;
 
     // enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the

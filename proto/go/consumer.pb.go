@@ -34,7 +34,15 @@ type SubscribeInit struct {
 	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	// Stable identity for an independent universal subscription. Set exactly
 	// one of group_id and subscriber_id. CreateSubscription must precede this stream.
-	SubscriberId  string `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	SubscriberId string `protobuf:"bytes,3,opt,name=subscriber_id,json=subscriberId,proto3" json:"subscriber_id,omitempty"`
+	// Opt in to broker-side acknowledgment after each successful stream send.
+	// Defaults to false (manual ACK/NACK). This is per worker connection, not
+	// durable subscription state. The broker may reject it with PermissionDenied.
+	// When accepted, initial metadata includes subscription-auto-ack: true;
+	// clients must require that confirmation before suppressing ACK/NACK frames.
+	// Handler failures cannot request redelivery; a crash before completion is
+	// persisted may still cause duplicates. Other recipients are unaffected.
+	AutoAck       bool `protobuf:"varint,4,opt,name=auto_ack,json=autoAck,proto3" json:"auto_ack,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -90,14 +98,21 @@ func (x *SubscribeInit) GetSubscriberId() string {
 	return ""
 }
 
+func (x *SubscribeInit) GetAutoAck() bool {
+	if x != nil {
+		return x.AutoAck
+	}
+	return false
+}
+
 // AckRequest is sent by the consumer to acknowledge or reject a message.
+// Brokers ignore both ACKs and NACKs on streams bound with auto_ack=true.
 type AckRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// success=true completes this subscription's delivery. The shared message
 	// is deleted only after all destination subscriptions finish.
 	// success=false: message was rejected (NACK); the broker will re-dispatch
-	//
-	//	it to another consumer on the next dispatcher tick.
+	//   it to another consumer on the next dispatcher tick.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	// delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
 	DeliveryTag   []byte `protobuf:"bytes,2,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
@@ -243,7 +258,7 @@ type QueueMessage struct {
 	// payload is the application data originally sent by the producer.
 	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
 	// delivery_tag is an opaque server-assigned identifier (the raw Pebble
-	// key). The consumer must echo this in AckRequest.delivery_tag.
+	// key). Manual-ack consumers must echo this in AckRequest.delivery_tag.
 	DeliveryTag []byte `protobuf:"bytes,3,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
 	// enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the
 	// message was first received. Useful for computing actual delivery latency.
@@ -490,11 +505,12 @@ var File_consumer_proto protoreflect.FileDescriptor
 
 const file_consumer_proto_rawDesc = "" +
 	"\n" +
-	"\x0econsumer.proto\x12\afutureq\"e\n" +
+	"\x0econsumer.proto\x12\afutureq\"\x80\x01\n" +
 	"\rSubscribeInit\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
-	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\"I\n" +
+	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\x12\x19\n" +
+	"\bauto_ack\x18\x04 \x01(\bR\aautoAck\"I\n" +
 	"\n" +
 	"AckRequest\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12!\n" +
