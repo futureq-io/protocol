@@ -1,5 +1,16 @@
 # Protocol
 
+`proto/topic.proto` defines explicit topic provisioning. `CreateTopic` can
+declare initial durable subscriptions atomically. `GetTopic` and `ListTopics`
+include declared topics with zero subscriptions.
+
+Regenerate the topic Go bindings from this directory:
+
+```sh
+protoc -I proto --go_out=proto/go --go_opt=paths=source_relative \
+  --go-grpc_out=proto/go --go-grpc_opt=paths=source_relative proto/topic.proto
+```
+
 `proto/consumer.proto` defines the consumer stream. `SubscribeInit.auto_ack`
 defaults to `false`, preserving manual ACK/NACK behavior. A worker may opt in
 with `true`; the broker can reject the stream with `PermissionDenied` according

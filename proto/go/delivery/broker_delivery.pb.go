@@ -753,13 +753,16 @@ func (x *SubscriptionMutation) GetSession() string {
 type SubscriptionCommand struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 1=create, 2=unsubscribe, 3=connect, 4=disconnect, 5=renew,
-	// 6=expire disconnected, 7=clean retired recipients from receipts.
+	// 6=expire disconnected, 7=clean retired recipients from receipts,
+	// 8=create topic with optional initial subscription mutations.
 	Operation     uint32                  `protobuf:"varint,1,opt,name=operation,proto3" json:"operation,omitempty"`
 	NowMs         int64                   `protobuf:"varint,2,opt,name=now_ms,json=nowMs,proto3" json:"now_ms,omitempty"`
 	LeaseMs       int64                   `protobuf:"varint,3,opt,name=lease_ms,json=leaseMs,proto3" json:"lease_ms,omitempty"`
 	IdleTimeoutMs int64                   `protobuf:"varint,4,opt,name=idle_timeout_ms,json=idleTimeoutMs,proto3" json:"idle_timeout_ms,omitempty"`
 	Mutations     []*SubscriptionMutation `protobuf:"bytes,5,rep,name=mutations,proto3" json:"mutations,omitempty"`
 	Keys          [][]byte                `protobuf:"bytes,6,rep,name=keys,proto3" json:"keys,omitempty"`
+	// Set for create topic only. Every initial subscription must use this topic.
+	Topic         string `protobuf:"bytes,7,opt,name=topic,proto3" json:"topic,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -836,6 +839,13 @@ func (x *SubscriptionCommand) GetKeys() [][]byte {
 	return nil
 }
 
+func (x *SubscriptionCommand) GetTopic() string {
+	if x != nil {
+		return x.Topic
+	}
+	return ""
+}
+
 var File_broker_delivery_proto protoreflect.FileDescriptor
 
 const file_broker_delivery_proto_rawDesc = "" +
@@ -895,14 +905,15 @@ const file_broker_delivery_proto_rawDesc = "" +
 	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
 	"\rsubscriber_id\x18\x03 \x01(\tR\fsubscriberId\x12\x1c\n" +
 	"\trecipient\x18\x04 \x01(\tR\trecipient\x12\x18\n" +
-	"\asession\x18\x05 \x01(\tR\asession\"\xe5\x01\n" +
+	"\asession\x18\x05 \x01(\tR\asession\"\xfb\x01\n" +
 	"\x13SubscriptionCommand\x12\x1c\n" +
 	"\toperation\x18\x01 \x01(\rR\toperation\x12\x15\n" +
 	"\x06now_ms\x18\x02 \x01(\x03R\x05nowMs\x12\x19\n" +
 	"\blease_ms\x18\x03 \x01(\x03R\aleaseMs\x12&\n" +
 	"\x0fidle_timeout_ms\x18\x04 \x01(\x03R\ridleTimeoutMs\x12B\n" +
 	"\tmutations\x18\x05 \x03(\v2$.futureq.broker.SubscriptionMutationR\tmutations\x12\x12\n" +
-	"\x04keys\x18\x06 \x03(\fR\x04keysB2Z0github.com/futureq-io/protocol/proto/go/deliveryb\x06proto3"
+	"\x04keys\x18\x06 \x03(\fR\x04keys\x12\x14\n" +
+	"\x05topic\x18\a \x01(\tR\x05topicB2Z0github.com/futureq-io/protocol/proto/go/deliveryb\x06proto3"
 
 var (
 	file_broker_delivery_proto_rawDescOnce sync.Once

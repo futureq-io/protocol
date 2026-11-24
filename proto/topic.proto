@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package futureq;
+
+option go_package = "github.com/futureq-io/protocol/proto/go";
+
+// Exactly one of group_id and subscriber_id is required.
+message InitialSubscription {
+    string group_id = 1;
+    string subscriber_id = 2;
+}
+
+message CreateTopicRequest {
+    string name = 1;
+    // Declare these durable subscriptions atomically with the topic. Repeated
+    // calls keep existing subscriptions and add any missing ones.
+    repeated InitialSubscription initial_subscriptions = 2;
+}
+
+message GetTopicRequest {
+    string name = 1;
+}
+
+message Topic {
+    string name = 1;
+}
+
+message ListTopicsRequest {
+    // Defaults to 100 when zero. Maximum 256.
+    uint32 page_size = 1;
+    string page_token = 2;
+}
+
+message ListTopicsResponse {
+    repeated Topic topics = 1;
+    string next_page_token = 2;
+}
+
+service FutureQTopic {
+    // Idempotently declares a topic and optional durable destinations.
+    rpc CreateTopic(CreateTopicRequest) returns (Topic);
+    rpc GetTopic(GetTopicRequest) returns (Topic);
+    // Lists topics by name, including topics without subscriptions.
+    rpc ListTopics(ListTopicsRequest) returns (ListTopicsResponse);
+}
