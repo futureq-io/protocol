@@ -112,7 +112,8 @@ type AckRequest struct {
 	// success=true completes this subscription's delivery. The shared message
 	// is deleted only after all destination subscriptions finish.
 	// success=false: message was rejected (NACK); the broker will re-dispatch
-	//   it to another consumer on the next dispatcher tick.
+	//
+	//	it to another consumer on the next dispatcher tick.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	// delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
 	DeliveryTag   []byte `protobuf:"bytes,2,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`

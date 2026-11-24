@@ -91,7 +91,8 @@ message SubscriptionResponse {
 message UnsubscribeResponse {}
 
 service FutureQConsumer {
-    // Idempotently declares durable interest without opening a consumer stream.
+    // Idempotently declares durable interest on an existing topic without
+    // opening a consumer stream.
     rpc CreateSubscription(SubscriptionRequest) returns (SubscriptionResponse);
     // Stops future routing and discards this subscription's pending deliveries.
     // Backlog cleanup is asynchronous; other subscriptions are unaffected.

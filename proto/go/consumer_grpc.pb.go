@@ -28,7 +28,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FutureQConsumerClient interface {
-	// Idempotently declares durable interest without opening a consumer stream.
+	// Idempotently declares durable interest on an existing topic without
+	// opening a consumer stream.
 	CreateSubscription(ctx context.Context, in *SubscriptionRequest, opts ...grpc.CallOption) (*SubscriptionResponse, error)
 	// Stops future routing and discards this subscription's pending deliveries.
 	// Backlog cleanup is asynchronous; other subscriptions are unaffected.
@@ -85,7 +86,8 @@ type FutureQConsumer_SubscribeClient = grpc.BidiStreamingClient[ConsumerFrame, Q
 // All implementations must embed UnimplementedFutureQConsumerServer
 // for forward compatibility.
 type FutureQConsumerServer interface {
-	// Idempotently declares durable interest without opening a consumer stream.
+	// Idempotently declares durable interest on an existing topic without
+	// opening a consumer stream.
 	CreateSubscription(context.Context, *SubscriptionRequest) (*SubscriptionResponse, error)
 	// Stops future routing and discards this subscription's pending deliveries.
 	// Backlog cleanup is asynchronous; other subscriptions are unaffected.
