@@ -32,6 +32,7 @@ const (
 	RetryCommand_DELETE_DEAD_LETTER    RetryCommand_Operation = 5
 	RetryCommand_SENT                  RetryCommand_Operation = 6
 	RetryCommand_CANCEL_RESERVATION    RetryCommand_Operation = 7
+	RetryCommand_RENEW_OWNER           RetryCommand_Operation = 8
 )
 
 // Enum value maps for RetryCommand_Operation.
@@ -45,6 +46,7 @@ var (
 		5: "DELETE_DEAD_LETTER",
 		6: "SENT",
 		7: "CANCEL_RESERVATION",
+		8: "RENEW_OWNER",
 	}
 	RetryCommand_Operation_value = map[string]int32{
 		"OPERATION_UNSPECIFIED": 0,
@@ -55,6 +57,7 @@ var (
 		"DELETE_DEAD_LETTER":    5,
 		"SENT":                  6,
 		"CANCEL_RESERVATION":    7,
+		"RENEW_OWNER":           8,
 	}
 )
 
@@ -334,8 +337,9 @@ type DeliveryAttempt struct {
 	// Empty after an unsuccessful attempt with budget remaining.
 	Token      []byte `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
 	DeadlineMs int64  `protobuf:"varint,3,opt,name=deadline_ms,json=deadlineMs,proto3" json:"deadline_ms,omitempty"`
-	// A reservation only becomes chargeable after a send or consumer outcome.
-	Reserved      bool `protobuf:"varint,4,opt,name=reserved,proto3" json:"reserved,omitempty"`
+	// A reservation only becomes chargeable when the broker commits send authorization.
+	Reserved      bool   `protobuf:"varint,4,opt,name=reserved,proto3" json:"reserved,omitempty"`
+	Owner         []byte `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -398,12 +402,20 @@ func (x *DeliveryAttempt) GetReserved() bool {
 	return false
 }
 
+func (x *DeliveryAttempt) GetOwner() []byte {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
 type DeliveryAttemptTarget struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           []byte                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 	Recipient     string                 `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	Token         []byte                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 	DeadlineMs    int64                  `protobuf:"varint,4,opt,name=deadline_ms,json=deadlineMs,proto3" json:"deadline_ms,omitempty"`
+	Owner         []byte                 `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -466,6 +478,13 @@ func (x *DeliveryAttemptTarget) GetDeadlineMs() int64 {
 	return 0
 }
 
+func (x *DeliveryAttemptTarget) GetOwner() []byte {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
 type RetryCommand struct {
 	state         protoimpl.MessageState   `protogen:"open.v1"`
 	Operation     RetryCommand_Operation   `protobuf:"varint,1,opt,name=operation,proto3,enum=futureq.broker.RetryCommand_Operation" json:"operation,omitempty"`
@@ -473,6 +492,8 @@ type RetryCommand struct {
 	Attempts      []*DeliveryAttemptTarget `protobuf:"bytes,3,rep,name=attempts,proto3" json:"attempts,omitempty"`
 	Topic         string                   `protobuf:"bytes,4,opt,name=topic,proto3" json:"topic,omitempty"`
 	DeadLetterId  []byte                   `protobuf:"bytes,5,opt,name=dead_letter_id,json=deadLetterId,proto3" json:"dead_letter_id,omitempty"`
+	Owner         []byte                   `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
+	LeaseUntilMs  int64                    `protobuf:"varint,7,opt,name=lease_until_ms,json=leaseUntilMs,proto3" json:"lease_until_ms,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -540,6 +561,20 @@ func (x *RetryCommand) GetDeadLetterId() []byte {
 		return x.DeadLetterId
 	}
 	return nil
+}
+
+func (x *RetryCommand) GetOwner() []byte {
+	if x != nil {
+		return x.Owner
+	}
+	return nil
+}
+
+func (x *RetryCommand) GetLeaseUntilMs() int64 {
+	if x != nil {
+		return x.LeaseUntilMs
+	}
+	return 0
 }
 
 // A cheap projection for maintenance/startup scans.
@@ -1181,25 +1216,29 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\battempts\x18\x05 \x03(\v2-.futureq.broker.DeliveryReceipt.AttemptsEntryR\battempts\x1a\\\n" +
 	"\rAttemptsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\rR\x03key\x125\n" +
-	"\x05value\x18\x02 \x01(\v2\x1f.futureq.broker.DeliveryAttemptR\x05value:\x028\x01\"|\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.futureq.broker.DeliveryAttemptR\x05value:\x028\x01\"\x92\x01\n" +
 	"\x0fDeliveryAttempt\x12\x16\n" +
 	"\x06number\x18\x01 \x01(\x04R\x06number\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\fR\x05token\x12\x1f\n" +
 	"\vdeadline_ms\x18\x03 \x01(\x03R\n" +
 	"deadlineMs\x12\x1a\n" +
-	"\breserved\x18\x04 \x01(\bR\breserved\"~\n" +
+	"\breserved\x18\x04 \x01(\bR\breserved\x12\x14\n" +
+	"\x05owner\x18\x05 \x01(\fR\x05owner\"\x94\x01\n" +
 	"\x15DeliveryAttemptTarget\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\fR\x03key\x12\x1c\n" +
 	"\trecipient\x18\x02 \x01(\tR\trecipient\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\fR\x05token\x12\x1f\n" +
 	"\vdeadline_ms\x18\x04 \x01(\x03R\n" +
-	"deadlineMs\"\xf7\x02\n" +
+	"deadlineMs\x12\x14\n" +
+	"\x05owner\x18\x05 \x01(\fR\x05owner\"\xc4\x03\n" +
 	"\fRetryCommand\x12D\n" +
 	"\toperation\x18\x01 \x01(\x0e2&.futureq.broker.RetryCommand.OperationR\toperation\x12\x15\n" +
 	"\x06now_ms\x18\x02 \x01(\x03R\x05nowMs\x12A\n" +
 	"\battempts\x18\x03 \x03(\v2%.futureq.broker.DeliveryAttemptTargetR\battempts\x12\x14\n" +
 	"\x05topic\x18\x04 \x01(\tR\x05topic\x12$\n" +
-	"\x0edead_letter_id\x18\x05 \x01(\fR\fdeadLetterId\"\x8a\x01\n" +
+	"\x0edead_letter_id\x18\x05 \x01(\fR\fdeadLetterId\x12\x14\n" +
+	"\x05owner\x18\x06 \x01(\fR\x05owner\x12$\n" +
+	"\x0elease_until_ms\x18\a \x01(\x03R\fleaseUntilMs\"\x9b\x01\n" +
 	"\tOperation\x12\x19\n" +
 	"\x15OPERATION_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05START\x10\x01\x12\a\n" +
@@ -1209,7 +1248,8 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\x06EXPIRE\x10\x04\x12\x16\n" +
 	"\x12DELETE_DEAD_LETTER\x10\x05\x12\b\n" +
 	"\x04SENT\x10\x06\x12\x16\n" +
-	"\x12CANCEL_RESERVATION\x10\a\",\n" +
+	"\x12CANCEL_RESERVATION\x10\a\x12\x0f\n" +
+	"\vRENEW_OWNER\x10\b\",\n" +
 	"\x14DeliveryReceiptEpoch\x12\x14\n" +
 	"\x05epoch\x18\x01 \x01(\x04R\x05epoch\"`\n" +
 	"\x14DeliveryPrepareGroup\x12\x14\n" +

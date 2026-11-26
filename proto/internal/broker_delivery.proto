@@ -38,14 +38,16 @@ message DeliveryAttempt {
   // Empty after an unsuccessful attempt with budget remaining.
   bytes token = 2;
   int64 deadline_ms = 3;
-  // A reservation only becomes chargeable after a send or consumer outcome.
+  // A reservation only becomes chargeable when the broker commits send authorization.
   bool reserved = 4;
+  bytes owner = 5;
 }
 message DeliveryAttemptTarget {
   bytes key = 1;
   string recipient = 2;
   bytes token = 3;
   int64 deadline_ms = 4;
+  bytes owner = 5;
 }
 message RetryCommand {
   enum Operation {
@@ -57,12 +59,15 @@ message RetryCommand {
     DELETE_DEAD_LETTER = 5;
     SENT = 6;
     CANCEL_RESERVATION = 7;
+    RENEW_OWNER = 8;
   }
   Operation operation = 1;
   int64 now_ms = 2;
   repeated DeliveryAttemptTarget attempts = 3;
   string topic = 4;
   bytes dead_letter_id = 5;
+  bytes owner = 6;
+  int64 lease_until_ms = 7;
 }
 // A cheap projection for maintenance/startup scans.
 message DeliveryReceiptEpoch { uint64 epoch = 1; }
