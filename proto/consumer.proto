@@ -35,8 +35,8 @@ message SubscribeInit {
 message AckRequest {
     // success=true completes this subscription's delivery. The shared message
     // is deleted only after all destination subscriptions finish.
-    // success=false: message was rejected (NACK); the broker will re-dispatch
-    //   it to another consumer on the next dispatcher tick.
+    // success=false rejects this attempt. The broker redelivers or dead-letters
+    // the subscription when its retry budget is exhausted.
     bool  success      = 1;
 
     // delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
@@ -62,8 +62,7 @@ message QueueMessage {
     // payload is the application data originally sent by the producer.
     bytes  payload      = 2;
 
-    // delivery_tag is an opaque server-assigned identifier (the raw Pebble
-    // key). Manual-ack consumers must echo this in AckRequest.delivery_tag.
+    // delivery_tag is opaque. Manual-ack consumers must echo it unchanged.
     bytes  delivery_tag = 3;
 
     // enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the
@@ -72,6 +71,11 @@ message QueueMessage {
 
     // delay_ms is the original delay requested by the producer.
     int64  delay_ms = 5;
+
+    optional uint32 max_retries = 6;
+
+    // One-based durable attempt number when max_retries is set.
+    uint64 attempt = 7;
 }
 
 // A durable interest, independent of any network connection. Exactly one of

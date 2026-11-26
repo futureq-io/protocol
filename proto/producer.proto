@@ -50,6 +50,10 @@ message PublishMessage {
     // it's a mapping from index to delivery_tags (direct pebble keys)
     // Indexes are expensive in FutureQ
     repeated Index indexes = 5;
+
+    // Maximum redeliveries per durable subscription. Omit for unlimited
+    // retries. Zero grants one attempt, then dead-letters that subscription.
+    optional uint32 max_retries = 6;
 }
 
 // PublishBatch is a single frame sent by the producer on the PublishStream.

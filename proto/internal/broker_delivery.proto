@@ -11,6 +11,7 @@ message StoredMessageMetadata {
   int64 enqueued_at_unix_ms = 3;
   int64 delay_ms = 4;
   int64 ttl_ms = 5;
+  optional uint32 max_retries = 7;
 }
 // The delivery path needs the payload but does not need stored indexes.
 message StoredDeliveryMessage {
@@ -19,6 +20,7 @@ message StoredDeliveryMessage {
   int64 enqueued_at_unix_ms = 3;
   int64 delay_ms = 4;
   int64 ttl_ms = 5;
+  optional uint32 max_retries = 7;
 }
 // Recipients are unique and sorted. Bit i records recipient i's completion;
 // unused high bits must be zero. The roster stays frozen across epoch changes.
@@ -28,6 +30,35 @@ message DeliveryReceipt {
   bytes acknowledged = 3;
   // Destinations were committed atomically with the message at publish time.
   bool publish_bound = 4;
+  // Sparse progress keyed by the index in the immutable recipient roster.
+  map<uint32, DeliveryAttempt> attempts = 5;
+}
+message DeliveryAttempt {
+  uint64 number = 1;
+  // Empty after an unsuccessful attempt with budget remaining.
+  bytes token = 2;
+  int64 deadline_ms = 3;
+}
+message DeliveryAttemptTarget {
+  bytes key = 1;
+  string recipient = 2;
+  bytes token = 3;
+  int64 deadline_ms = 4;
+}
+message RetryCommand {
+  enum Operation {
+    OPERATION_UNSPECIFIED = 0;
+    START = 1;
+    ACK = 2;
+    NACK = 3;
+    EXPIRE = 4;
+    DELETE_DEAD_LETTER = 5;
+  }
+  Operation operation = 1;
+  int64 now_ms = 2;
+  repeated DeliveryAttemptTarget attempts = 3;
+  string topic = 4;
+  bytes dead_letter_id = 5;
 }
 // A cheap projection for maintenance/startup scans.
 message DeliveryReceiptEpoch { uint64 epoch = 1; }

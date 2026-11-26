@@ -179,7 +179,10 @@ type PublishMessage struct {
 	// these are the indexes for the published event
 	// it's a mapping from index to delivery_tags (direct pebble keys)
 	// Indexes are expensive in FutureQ
-	Indexes       []*Index `protobuf:"bytes,5,rep,name=indexes,proto3" json:"indexes,omitempty"`
+	Indexes []*Index `protobuf:"bytes,5,rep,name=indexes,proto3" json:"indexes,omitempty"`
+	// Maximum redeliveries per durable subscription. Omit for unlimited
+	// retries. Zero grants one attempt, then dead-letters that subscription.
+	MaxRetries    *uint32 `protobuf:"varint,6,opt,name=max_retries,json=maxRetries,proto3,oneof" json:"max_retries,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -247,6 +250,13 @@ func (x *PublishMessage) GetIndexes() []*Index {
 		return x.Indexes
 	}
 	return nil
+}
+
+func (x *PublishMessage) GetMaxRetries() uint32 {
+	if x != nil && x.MaxRetries != nil {
+		return *x.MaxRetries
+	}
+	return 0
 }
 
 // PublishBatch is a single frame sent by the producer on the PublishStream.
@@ -370,13 +380,16 @@ const file_producer_proto_rawDesc = "" +
 	"\vint64_value\x18\x01 \x01(\x03H\x00R\n" +
 	"int64Value\x12#\n" +
 	"\fstring_value\x18\x02 \x01(\tH\x00R\vstringValueB\a\n" +
-	"\x05value\"\x9c\x01\n" +
+	"\x05value\"\xd2\x01\n" +
 	"\x0ePublishMessage\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12\x19\n" +
 	"\bdelay_ms\x18\x03 \x01(\x03R\adelayMs\x12\x15\n" +
 	"\x06ttl_ms\x18\x04 \x01(\x03R\x05ttlMs\x12(\n" +
-	"\aindexes\x18\x05 \x03(\v2\x0e.futureq.IndexR\aindexes\"s\n" +
+	"\aindexes\x18\x05 \x03(\v2\x0e.futureq.IndexR\aindexes\x12$\n" +
+	"\vmax_retries\x18\x06 \x01(\rH\x00R\n" +
+	"maxRetries\x88\x01\x01B\x0e\n" +
+	"\f_max_retries\"s\n" +
 	"\fPublishBatch\x123\n" +
 	"\bmessages\x18\x01 \x03(\v2\x17.futureq.PublishMessageR\bmessages\x12.\n" +
 	"\tack_level\x18\x02 \x01(\x0e2\x11.futureq.AckLevelR\backLevel\"P\n" +
@@ -433,6 +446,7 @@ func file_producer_proto_init() {
 		(*Index_Int64Value)(nil),
 		(*Index_StringValue)(nil),
 	}
+	file_producer_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

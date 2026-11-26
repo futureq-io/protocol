@@ -43,6 +43,7 @@ type StoredMessage struct {
 	// 0 means no expiry.
 	TtlMs         int64        `protobuf:"varint,5,opt,name=ttl_ms,json=ttlMs,proto3" json:"ttl_ms,omitempty"`
 	Indexes       []*_go.Index `protobuf:"bytes,6,rep,name=indexes,proto3" json:"indexes,omitempty"`
+	MaxRetries    *uint32      `protobuf:"varint,7,opt,name=max_retries,json=maxRetries,proto3,oneof" json:"max_retries,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -119,18 +120,28 @@ func (x *StoredMessage) GetIndexes() []*_go.Index {
 	return nil
 }
 
+func (x *StoredMessage) GetMaxRetries() uint32 {
+	if x != nil && x.MaxRetries != nil {
+		return *x.MaxRetries
+	}
+	return 0
+}
+
 var File_internal_storage_proto protoreflect.FileDescriptor
 
 const file_internal_storage_proto_rawDesc = "" +
 	"\n" +
-	"\x16internal/storage.proto\x12\binternal\x1a\x0eproducer.proto\"\xca\x01\n" +
+	"\x16internal/storage.proto\x12\binternal\x1a\x0eproducer.proto\"\x80\x02\n" +
 	"\rStoredMessage\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12-\n" +
 	"\x13enqueued_at_unix_ms\x18\x03 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
 	"\bdelay_ms\x18\x04 \x01(\x03R\adelayMs\x12\x15\n" +
 	"\x06ttl_ms\x18\x05 \x01(\x03R\x05ttlMs\x12(\n" +
-	"\aindexes\x18\x06 \x03(\v2\x0e.futureq.IndexR\aindexesB1Z/github.com/futureq-io/protocol/proto/go/storageb\x06proto3"
+	"\aindexes\x18\x06 \x03(\v2\x0e.futureq.IndexR\aindexes\x12$\n" +
+	"\vmax_retries\x18\a \x01(\rH\x00R\n" +
+	"maxRetries\x88\x01\x01B\x0e\n" +
+	"\f_max_retriesB1Z/github.com/futureq-io/protocol/proto/go/storageb\x06proto3"
 
 var (
 	file_internal_storage_proto_rawDescOnce sync.Once
@@ -163,6 +174,7 @@ func file_internal_storage_proto_init() {
 	if File_internal_storage_proto != nil {
 		return
 	}
+	file_internal_storage_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

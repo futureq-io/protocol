@@ -30,4 +30,6 @@ message StoredMessage {
     int64  ttl_ms         = 5;
 
     repeated futureq.Index indexes = 6;
+
+    optional uint32 max_retries = 7;
 }
