@@ -266,7 +266,12 @@ type QueueMessage struct {
 	DelayMs    int64   `protobuf:"varint,5,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
 	MaxRetries *uint32 `protobuf:"varint,6,opt,name=max_retries,json=maxRetries,proto3,oneof" json:"max_retries,omitempty"`
 	// One-based durable attempt number when max_retries is set.
-	Attempt       uint64 `protobuf:"varint,7,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	Attempt uint64 `protobuf:"varint,7,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	// A delivery that exceeds one frame is split into consecutive chunks.
+	// Chunk frames carry only these two fields. Concatenate chunk_data in
+	// stream order and decode it as QueueMessage after more_chunks is false.
+	ChunkData     []byte `protobuf:"bytes,8,opt,name=chunk_data,json=chunkData,proto3" json:"chunk_data,omitempty"`
+	MoreChunks    bool   `protobuf:"varint,9,opt,name=more_chunks,json=moreChunks,proto3" json:"more_chunks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -348,6 +353,20 @@ func (x *QueueMessage) GetAttempt() uint64 {
 		return x.Attempt
 	}
 	return 0
+}
+
+func (x *QueueMessage) GetChunkData() []byte {
+	if x != nil {
+		return x.ChunkData
+	}
+	return nil
+}
+
+func (x *QueueMessage) GetMoreChunks() bool {
+	if x != nil {
+		return x.MoreChunks
+	}
+	return false
 }
 
 // A durable interest, independent of any network connection. Exactly one of
@@ -534,7 +553,7 @@ const file_consumer_proto_rawDesc = "" +
 	"\rConsumerFrame\x12,\n" +
 	"\x04init\x18\x01 \x01(\v2\x16.futureq.SubscribeInitH\x00R\x04init\x12'\n" +
 	"\x03ack\x18\x02 \x01(\v2\x13.futureq.AckRequestH\x00R\x03ackB\x06\n" +
-	"\x04body\"\xfb\x01\n" +
+	"\x04body\"\xbb\x02\n" +
 	"\fQueueMessage\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12!\n" +
@@ -543,7 +562,11 @@ const file_consumer_proto_rawDesc = "" +
 	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs\x12$\n" +
 	"\vmax_retries\x18\x06 \x01(\rH\x00R\n" +
 	"maxRetries\x88\x01\x01\x12\x18\n" +
-	"\aattempt\x18\a \x01(\x04R\aattemptB\x0e\n" +
+	"\aattempt\x18\a \x01(\x04R\aattempt\x12\x1d\n" +
+	"\n" +
+	"chunk_data\x18\b \x01(\fR\tchunkData\x12\x1f\n" +
+	"\vmore_chunks\x18\t \x01(\bR\n" +
+	"moreChunksB\x0e\n" +
 	"\f_max_retries\"k\n" +
 	"\x13SubscriptionRequest\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +

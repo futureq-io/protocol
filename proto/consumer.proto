@@ -76,6 +76,12 @@ message QueueMessage {
 
     // One-based durable attempt number when max_retries is set.
     uint64 attempt = 7;
+
+    // A delivery that exceeds one frame is split into consecutive chunks.
+    // Chunk frames carry only these two fields. Concatenate chunk_data in
+    // stream order and decode it as QueueMessage after more_chunks is false.
+    bytes chunk_data = 8;
+    bool more_chunks = 9;
 }
 
 // A durable interest, independent of any network connection. Exactly one of

@@ -83,8 +83,11 @@ type DeadLetterSummary struct {
 	Reason               DeadLetterReason `protobuf:"varint,7,opt,name=reason,proto3,enum=futureq.DeadLetterReason" json:"reason,omitempty"`
 	DeadLetteredAtUnixMs int64            `protobuf:"varint,8,opt,name=dead_lettered_at_unix_ms,json=deadLetteredAtUnixMs,proto3" json:"dead_lettered_at_unix_ms,omitempty"`
 	EnqueuedAtUnixMs     int64            `protobuf:"varint,9,opt,name=enqueued_at_unix_ms,json=enqueuedAtUnixMs,proto3" json:"enqueued_at_unix_ms,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// The list response omitted the group or subscriber ID to fit the frame.
+	// GetDeadLetter returns the full summary using this entry's ID.
+	IdentityOmitted bool `protobuf:"varint,10,opt,name=identity_omitted,json=identityOmitted,proto3" json:"identity_omitted,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *DeadLetterSummary) Reset() {
@@ -178,6 +181,13 @@ func (x *DeadLetterSummary) GetEnqueuedAtUnixMs() int64 {
 		return x.EnqueuedAtUnixMs
 	}
 	return 0
+}
+
+func (x *DeadLetterSummary) GetIdentityOmitted() bool {
+	if x != nil {
+		return x.IdentityOmitted
+	}
+	return false
 }
 
 type DeadLetter struct {
@@ -482,7 +492,7 @@ var File_dead_letter_proto protoreflect.FileDescriptor
 
 const file_dead_letter_proto_rawDesc = "" +
 	"\n" +
-	"\x11dead_letter.proto\x12\afutureq\x1a\x0eproducer.proto\"\xcf\x02\n" +
+	"\x11dead_letter.proto\x12\afutureq\x1a\x0eproducer.proto\"\xfa\x02\n" +
 	"\x11DeadLetterSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\fR\x02id\x12\x14\n" +
 	"\x05topic\x18\x02 \x01(\tR\x05topic\x12\x1e\n" +
@@ -494,7 +504,9 @@ const file_dead_letter_proto_rawDesc = "" +
 	"\battempts\x18\x06 \x01(\x04R\battempts\x121\n" +
 	"\x06reason\x18\a \x01(\x0e2\x19.futureq.DeadLetterReasonR\x06reason\x126\n" +
 	"\x18dead_lettered_at_unix_ms\x18\b \x01(\x03R\x14deadLetteredAtUnixMs\x12-\n" +
-	"\x13enqueued_at_unix_ms\x18\t \x01(\x03R\x10enqueuedAtUnixMs\"u\n" +
+	"\x13enqueued_at_unix_ms\x18\t \x01(\x03R\x10enqueuedAtUnixMs\x12)\n" +
+	"\x10identity_omitted\x18\n" +
+	" \x01(\bR\x0fidentityOmitted\"u\n" +
 	"\n" +
 	"DeadLetter\x124\n" +
 	"\asummary\x18\x01 \x01(\v2\x1a.futureq.DeadLetterSummaryR\asummary\x121\n" +

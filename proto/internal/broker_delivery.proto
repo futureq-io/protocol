@@ -58,6 +58,7 @@ message RetryCommand {
     EXPIRE = 4;
     DELETE_DEAD_LETTER = 5;
     SENT = 6;
+    // The owner verified the attempt never reached transport.
     CANCEL_RESERVATION = 7;
     RENEW_OWNER = 8;
   }

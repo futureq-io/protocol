@@ -24,6 +24,9 @@ message DeadLetterSummary {
     DeadLetterReason reason = 7;
     int64 dead_lettered_at_unix_ms = 8;
     int64 enqueued_at_unix_ms = 9;
+    // The list response omitted the group or subscriber ID to fit the frame.
+    // GetDeadLetter returns the full summary using this entry's ID.
+    bool identity_omitted = 10;
 }
 
 message DeadLetter {

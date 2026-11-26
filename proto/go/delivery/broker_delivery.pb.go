@@ -31,8 +31,9 @@ const (
 	RetryCommand_EXPIRE                RetryCommand_Operation = 4
 	RetryCommand_DELETE_DEAD_LETTER    RetryCommand_Operation = 5
 	RetryCommand_SENT                  RetryCommand_Operation = 6
-	RetryCommand_CANCEL_RESERVATION    RetryCommand_Operation = 7
-	RetryCommand_RENEW_OWNER           RetryCommand_Operation = 8
+	// The owner verified the attempt never reached transport.
+	RetryCommand_CANCEL_RESERVATION RetryCommand_Operation = 7
+	RetryCommand_RENEW_OWNER        RetryCommand_Operation = 8
 )
 
 // Enum value maps for RetryCommand_Operation.
