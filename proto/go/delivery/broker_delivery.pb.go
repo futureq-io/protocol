@@ -30,6 +30,8 @@ const (
 	RetryCommand_NACK                  RetryCommand_Operation = 3
 	RetryCommand_EXPIRE                RetryCommand_Operation = 4
 	RetryCommand_DELETE_DEAD_LETTER    RetryCommand_Operation = 5
+	RetryCommand_SENT                  RetryCommand_Operation = 6
+	RetryCommand_CANCEL_RESERVATION    RetryCommand_Operation = 7
 )
 
 // Enum value maps for RetryCommand_Operation.
@@ -41,6 +43,8 @@ var (
 		3: "NACK",
 		4: "EXPIRE",
 		5: "DELETE_DEAD_LETTER",
+		6: "SENT",
+		7: "CANCEL_RESERVATION",
 	}
 	RetryCommand_Operation_value = map[string]int32{
 		"OPERATION_UNSPECIFIED": 0,
@@ -49,6 +53,8 @@ var (
 		"NACK":                  3,
 		"EXPIRE":                4,
 		"DELETE_DEAD_LETTER":    5,
+		"SENT":                  6,
+		"CANCEL_RESERVATION":    7,
 	}
 )
 
@@ -326,8 +332,10 @@ type DeliveryAttempt struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Number uint64                 `protobuf:"varint,1,opt,name=number,proto3" json:"number,omitempty"`
 	// Empty after an unsuccessful attempt with budget remaining.
-	Token         []byte `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	DeadlineMs    int64  `protobuf:"varint,3,opt,name=deadline_ms,json=deadlineMs,proto3" json:"deadline_ms,omitempty"`
+	Token      []byte `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	DeadlineMs int64  `protobuf:"varint,3,opt,name=deadline_ms,json=deadlineMs,proto3" json:"deadline_ms,omitempty"`
+	// A reservation only becomes chargeable after a send or consumer outcome.
+	Reserved      bool `protobuf:"varint,4,opt,name=reserved,proto3" json:"reserved,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -381,6 +389,13 @@ func (x *DeliveryAttempt) GetDeadlineMs() int64 {
 		return x.DeadlineMs
 	}
 	return 0
+}
+
+func (x *DeliveryAttempt) GetReserved() bool {
+	if x != nil {
+		return x.Reserved
+	}
+	return false
 }
 
 type DeliveryAttemptTarget struct {
@@ -1166,24 +1181,25 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\battempts\x18\x05 \x03(\v2-.futureq.broker.DeliveryReceipt.AttemptsEntryR\battempts\x1a\\\n" +
 	"\rAttemptsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\rR\x03key\x125\n" +
-	"\x05value\x18\x02 \x01(\v2\x1f.futureq.broker.DeliveryAttemptR\x05value:\x028\x01\"`\n" +
+	"\x05value\x18\x02 \x01(\v2\x1f.futureq.broker.DeliveryAttemptR\x05value:\x028\x01\"|\n" +
 	"\x0fDeliveryAttempt\x12\x16\n" +
 	"\x06number\x18\x01 \x01(\x04R\x06number\x12\x14\n" +
 	"\x05token\x18\x02 \x01(\fR\x05token\x12\x1f\n" +
 	"\vdeadline_ms\x18\x03 \x01(\x03R\n" +
-	"deadlineMs\"~\n" +
+	"deadlineMs\x12\x1a\n" +
+	"\breserved\x18\x04 \x01(\bR\breserved\"~\n" +
 	"\x15DeliveryAttemptTarget\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\fR\x03key\x12\x1c\n" +
 	"\trecipient\x18\x02 \x01(\tR\trecipient\x12\x14\n" +
 	"\x05token\x18\x03 \x01(\fR\x05token\x12\x1f\n" +
 	"\vdeadline_ms\x18\x04 \x01(\x03R\n" +
-	"deadlineMs\"\xd4\x02\n" +
+	"deadlineMs\"\xf7\x02\n" +
 	"\fRetryCommand\x12D\n" +
 	"\toperation\x18\x01 \x01(\x0e2&.futureq.broker.RetryCommand.OperationR\toperation\x12\x15\n" +
 	"\x06now_ms\x18\x02 \x01(\x03R\x05nowMs\x12A\n" +
 	"\battempts\x18\x03 \x03(\v2%.futureq.broker.DeliveryAttemptTargetR\battempts\x12\x14\n" +
 	"\x05topic\x18\x04 \x01(\tR\x05topic\x12$\n" +
-	"\x0edead_letter_id\x18\x05 \x01(\fR\fdeadLetterId\"h\n" +
+	"\x0edead_letter_id\x18\x05 \x01(\fR\fdeadLetterId\"\x8a\x01\n" +
 	"\tOperation\x12\x19\n" +
 	"\x15OPERATION_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05START\x10\x01\x12\a\n" +
@@ -1191,7 +1207,9 @@ const file_internal_broker_delivery_proto_rawDesc = "" +
 	"\x04NACK\x10\x03\x12\n" +
 	"\n" +
 	"\x06EXPIRE\x10\x04\x12\x16\n" +
-	"\x12DELETE_DEAD_LETTER\x10\x05\",\n" +
+	"\x12DELETE_DEAD_LETTER\x10\x05\x12\b\n" +
+	"\x04SENT\x10\x06\x12\x16\n" +
+	"\x12CANCEL_RESERVATION\x10\a\",\n" +
 	"\x14DeliveryReceiptEpoch\x12\x14\n" +
 	"\x05epoch\x18\x01 \x01(\x04R\x05epoch\"`\n" +
 	"\x14DeliveryPrepareGroup\x12\x14\n" +

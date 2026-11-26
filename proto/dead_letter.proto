@@ -48,11 +48,16 @@ message DeadLetterRequest {
     bytes id = 2;
 }
 
+// Concatenate data from all chunks in stream order and decode it as DeadLetter.
+message DeadLetterChunk {
+    bytes data = 1;
+}
+
 message DeleteDeadLetterResponse {}
 
 service FutureQDeadLetter {
     rpc ListDeadLetters(ListDeadLettersRequest) returns (ListDeadLettersResponse);
-    rpc GetDeadLetter(DeadLetterRequest) returns (DeadLetter);
+    rpc GetDeadLetter(DeadLetterRequest) returns (stream DeadLetterChunk);
     // Idempotently removes a retained record.
     rpc DeleteDeadLetter(DeadLetterRequest) returns (DeleteDeadLetterResponse);
 }

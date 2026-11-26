@@ -38,6 +38,8 @@ message DeliveryAttempt {
   // Empty after an unsuccessful attempt with budget remaining.
   bytes token = 2;
   int64 deadline_ms = 3;
+  // A reservation only becomes chargeable after a send or consumer outcome.
+  bool reserved = 4;
 }
 message DeliveryAttemptTarget {
   bytes key = 1;
@@ -53,6 +55,8 @@ message RetryCommand {
     NACK = 3;
     EXPIRE = 4;
     DELETE_DEAD_LETTER = 5;
+    SENT = 6;
+    CANCEL_RESERVATION = 7;
   }
   Operation operation = 1;
   int64 now_ms = 2;

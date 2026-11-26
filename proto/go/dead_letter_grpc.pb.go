@@ -29,7 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FutureQDeadLetterClient interface {
 	ListDeadLetters(ctx context.Context, in *ListDeadLettersRequest, opts ...grpc.CallOption) (*ListDeadLettersResponse, error)
-	GetDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (*DeadLetter, error)
+	GetDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeadLetterChunk], error)
 	// Idempotently removes a retained record.
 	DeleteDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (*DeleteDeadLetterResponse, error)
 }
@@ -52,15 +52,24 @@ func (c *futureQDeadLetterClient) ListDeadLetters(ctx context.Context, in *ListD
 	return out, nil
 }
 
-func (c *futureQDeadLetterClient) GetDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (*DeadLetter, error) {
+func (c *futureQDeadLetterClient) GetDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DeadLetterChunk], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DeadLetter)
-	err := c.cc.Invoke(ctx, FutureQDeadLetter_GetDeadLetter_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &FutureQDeadLetter_ServiceDesc.Streams[0], FutureQDeadLetter_GetDeadLetter_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[DeadLetterRequest, DeadLetterChunk]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type FutureQDeadLetter_GetDeadLetterClient = grpc.ServerStreamingClient[DeadLetterChunk]
 
 func (c *futureQDeadLetterClient) DeleteDeadLetter(ctx context.Context, in *DeadLetterRequest, opts ...grpc.CallOption) (*DeleteDeadLetterResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -77,7 +86,7 @@ func (c *futureQDeadLetterClient) DeleteDeadLetter(ctx context.Context, in *Dead
 // for forward compatibility.
 type FutureQDeadLetterServer interface {
 	ListDeadLetters(context.Context, *ListDeadLettersRequest) (*ListDeadLettersResponse, error)
-	GetDeadLetter(context.Context, *DeadLetterRequest) (*DeadLetter, error)
+	GetDeadLetter(*DeadLetterRequest, grpc.ServerStreamingServer[DeadLetterChunk]) error
 	// Idempotently removes a retained record.
 	DeleteDeadLetter(context.Context, *DeadLetterRequest) (*DeleteDeadLetterResponse, error)
 	mustEmbedUnimplementedFutureQDeadLetterServer()
@@ -93,8 +102,8 @@ type UnimplementedFutureQDeadLetterServer struct{}
 func (UnimplementedFutureQDeadLetterServer) ListDeadLetters(context.Context, *ListDeadLettersRequest) (*ListDeadLettersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListDeadLetters not implemented")
 }
-func (UnimplementedFutureQDeadLetterServer) GetDeadLetter(context.Context, *DeadLetterRequest) (*DeadLetter, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetDeadLetter not implemented")
+func (UnimplementedFutureQDeadLetterServer) GetDeadLetter(*DeadLetterRequest, grpc.ServerStreamingServer[DeadLetterChunk]) error {
+	return status.Error(codes.Unimplemented, "method GetDeadLetter not implemented")
 }
 func (UnimplementedFutureQDeadLetterServer) DeleteDeadLetter(context.Context, *DeadLetterRequest) (*DeleteDeadLetterResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteDeadLetter not implemented")
@@ -138,23 +147,16 @@ func _FutureQDeadLetter_ListDeadLetters_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FutureQDeadLetter_GetDeadLetter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeadLetterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _FutureQDeadLetter_GetDeadLetter_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DeadLetterRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(FutureQDeadLetterServer).GetDeadLetter(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FutureQDeadLetter_GetDeadLetter_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FutureQDeadLetterServer).GetDeadLetter(ctx, req.(*DeadLetterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(FutureQDeadLetterServer).GetDeadLetter(m, &grpc.GenericServerStream[DeadLetterRequest, DeadLetterChunk]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type FutureQDeadLetter_GetDeadLetterServer = grpc.ServerStreamingServer[DeadLetterChunk]
 
 func _FutureQDeadLetter_DeleteDeadLetter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeadLetterRequest)
@@ -186,14 +188,16 @@ var FutureQDeadLetter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _FutureQDeadLetter_ListDeadLetters_Handler,
 		},
 		{
-			MethodName: "GetDeadLetter",
-			Handler:    _FutureQDeadLetter_GetDeadLetter_Handler,
-		},
-		{
 			MethodName: "DeleteDeadLetter",
 			Handler:    _FutureQDeadLetter_DeleteDeadLetter_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetDeadLetter",
+			Handler:       _FutureQDeadLetter_GetDeadLetter_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "dead_letter.proto",
 }

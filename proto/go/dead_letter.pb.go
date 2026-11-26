@@ -397,6 +397,51 @@ func (x *DeadLetterRequest) GetId() []byte {
 	return nil
 }
 
+// Concatenate data from all chunks in stream order and decode it as DeadLetter.
+type DeadLetterChunk struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Data          []byte                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeadLetterChunk) Reset() {
+	*x = DeadLetterChunk{}
+	mi := &file_dead_letter_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeadLetterChunk) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeadLetterChunk) ProtoMessage() {}
+
+func (x *DeadLetterChunk) ProtoReflect() protoreflect.Message {
+	mi := &file_dead_letter_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeadLetterChunk.ProtoReflect.Descriptor instead.
+func (*DeadLetterChunk) Descriptor() ([]byte, []int) {
+	return file_dead_letter_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DeadLetterChunk) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
 type DeleteDeadLetterResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -405,7 +450,7 @@ type DeleteDeadLetterResponse struct {
 
 func (x *DeleteDeadLetterResponse) Reset() {
 	*x = DeleteDeadLetterResponse{}
-	mi := &file_dead_letter_proto_msgTypes[5]
+	mi := &file_dead_letter_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -417,7 +462,7 @@ func (x *DeleteDeadLetterResponse) String() string {
 func (*DeleteDeadLetterResponse) ProtoMessage() {}
 
 func (x *DeleteDeadLetterResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_dead_letter_proto_msgTypes[5]
+	mi := &file_dead_letter_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -430,7 +475,7 @@ func (x *DeleteDeadLetterResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDeadLetterResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDeadLetterResponse) Descriptor() ([]byte, []int) {
-	return file_dead_letter_proto_rawDescGZIP(), []int{5}
+	return file_dead_letter_proto_rawDescGZIP(), []int{6}
 }
 
 var File_dead_letter_proto protoreflect.FileDescriptor
@@ -464,15 +509,17 @@ const file_dead_letter_proto_rawDesc = "" +
 	"\x0fnext_page_token\x18\x02 \x01(\fR\rnextPageToken\"9\n" +
 	"\x11DeadLetterRequest\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x0e\n" +
-	"\x02id\x18\x02 \x01(\fR\x02id\"\x1a\n" +
+	"\x02id\x18\x02 \x01(\fR\x02id\"%\n" +
+	"\x0fDeadLetterChunk\x12\x12\n" +
+	"\x04data\x18\x01 \x01(\fR\x04data\"\x1a\n" +
 	"\x18DeleteDeadLetterResponse*s\n" +
 	"\x10DeadLetterReason\x12\"\n" +
 	"\x1eDEAD_LETTER_REASON_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17DEAD_LETTER_REASON_NACK\x10\x01\x12\x1e\n" +
-	"\x1aDEAD_LETTER_REASON_TIMEOUT\x10\x022\xfe\x01\n" +
+	"\x1aDEAD_LETTER_REASON_TIMEOUT\x10\x022\x85\x02\n" +
 	"\x11FutureQDeadLetter\x12T\n" +
-	"\x0fListDeadLetters\x12\x1f.futureq.ListDeadLettersRequest\x1a .futureq.ListDeadLettersResponse\x12@\n" +
-	"\rGetDeadLetter\x12\x1a.futureq.DeadLetterRequest\x1a\x13.futureq.DeadLetter\x12Q\n" +
+	"\x0fListDeadLetters\x12\x1f.futureq.ListDeadLettersRequest\x1a .futureq.ListDeadLettersResponse\x12G\n" +
+	"\rGetDeadLetter\x12\x1a.futureq.DeadLetterRequest\x1a\x18.futureq.DeadLetterChunk0\x01\x12Q\n" +
 	"\x10DeleteDeadLetter\x12\x1a.futureq.DeadLetterRequest\x1a!.futureq.DeleteDeadLetterResponseB)Z'github.com/futureq-io/protocol/proto/gob\x06proto3"
 
 var (
@@ -488,7 +535,7 @@ func file_dead_letter_proto_rawDescGZIP() []byte {
 }
 
 var file_dead_letter_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dead_letter_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_dead_letter_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_dead_letter_proto_goTypes = []any{
 	(DeadLetterReason)(0),            // 0: futureq.DeadLetterReason
 	(*DeadLetterSummary)(nil),        // 1: futureq.DeadLetterSummary
@@ -496,20 +543,21 @@ var file_dead_letter_proto_goTypes = []any{
 	(*ListDeadLettersRequest)(nil),   // 3: futureq.ListDeadLettersRequest
 	(*ListDeadLettersResponse)(nil),  // 4: futureq.ListDeadLettersResponse
 	(*DeadLetterRequest)(nil),        // 5: futureq.DeadLetterRequest
-	(*DeleteDeadLetterResponse)(nil), // 6: futureq.DeleteDeadLetterResponse
-	(*PublishMessage)(nil),           // 7: futureq.PublishMessage
+	(*DeadLetterChunk)(nil),          // 6: futureq.DeadLetterChunk
+	(*DeleteDeadLetterResponse)(nil), // 7: futureq.DeleteDeadLetterResponse
+	(*PublishMessage)(nil),           // 8: futureq.PublishMessage
 }
 var file_dead_letter_proto_depIdxs = []int32{
 	0, // 0: futureq.DeadLetterSummary.reason:type_name -> futureq.DeadLetterReason
 	1, // 1: futureq.DeadLetter.summary:type_name -> futureq.DeadLetterSummary
-	7, // 2: futureq.DeadLetter.message:type_name -> futureq.PublishMessage
+	8, // 2: futureq.DeadLetter.message:type_name -> futureq.PublishMessage
 	1, // 3: futureq.ListDeadLettersResponse.entries:type_name -> futureq.DeadLetterSummary
 	3, // 4: futureq.FutureQDeadLetter.ListDeadLetters:input_type -> futureq.ListDeadLettersRequest
 	5, // 5: futureq.FutureQDeadLetter.GetDeadLetter:input_type -> futureq.DeadLetterRequest
 	5, // 6: futureq.FutureQDeadLetter.DeleteDeadLetter:input_type -> futureq.DeadLetterRequest
 	4, // 7: futureq.FutureQDeadLetter.ListDeadLetters:output_type -> futureq.ListDeadLettersResponse
-	2, // 8: futureq.FutureQDeadLetter.GetDeadLetter:output_type -> futureq.DeadLetter
-	6, // 9: futureq.FutureQDeadLetter.DeleteDeadLetter:output_type -> futureq.DeleteDeadLetterResponse
+	6, // 8: futureq.FutureQDeadLetter.GetDeadLetter:output_type -> futureq.DeadLetterChunk
+	7, // 9: futureq.FutureQDeadLetter.DeleteDeadLetter:output_type -> futureq.DeleteDeadLetterResponse
 	7, // [7:10] is the sub-list for method output_type
 	4, // [4:7] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
@@ -529,7 +577,7 @@ func file_dead_letter_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_dead_letter_proto_rawDesc), len(file_dead_letter_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
