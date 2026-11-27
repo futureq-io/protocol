@@ -111,9 +111,8 @@ type AckRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// success=true completes this subscription's delivery. The shared message
 	// is deleted only after all destination subscriptions finish.
-	// success=false: message was rejected (NACK); the broker will re-dispatch
-	//
-	//	it to another consumer on the next dispatcher tick.
+	// success=false rejects this attempt. The broker redelivers or dead-letters
+	// the subscription when its retry budget is exhausted.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	// delivery_tag must be the exact bytes received in QueueMessage.delivery_tag.
 	DeliveryTag   []byte `protobuf:"bytes,2,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
@@ -258,14 +257,21 @@ type QueueMessage struct {
 	Topic string `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
 	// payload is the application data originally sent by the producer.
 	Payload []byte `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
-	// delivery_tag is an opaque server-assigned identifier (the raw Pebble
-	// key). Manual-ack consumers must echo this in AckRequest.delivery_tag.
+	// delivery_tag is opaque. Manual-ack consumers must echo it unchanged.
 	DeliveryTag []byte `protobuf:"bytes,3,opt,name=delivery_tag,json=deliveryTag,proto3" json:"delivery_tag,omitempty"`
 	// enqueued_at_unix_ms is the broker wall-clock time (Unix ms) when the
 	// message was first received. Useful for computing actual delivery latency.
 	EnqueuedAtUnixMs int64 `protobuf:"varint,4,opt,name=enqueued_at_unix_ms,json=enqueuedAtUnixMs,proto3" json:"enqueued_at_unix_ms,omitempty"`
 	// delay_ms is the original delay requested by the producer.
-	DelayMs       int64 `protobuf:"varint,5,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
+	DelayMs    int64   `protobuf:"varint,5,opt,name=delay_ms,json=delayMs,proto3" json:"delay_ms,omitempty"`
+	MaxRetries *uint32 `protobuf:"varint,6,opt,name=max_retries,json=maxRetries,proto3,oneof" json:"max_retries,omitempty"`
+	// One-based durable attempt number when max_retries is set.
+	Attempt uint64 `protobuf:"varint,7,opt,name=attempt,proto3" json:"attempt,omitempty"`
+	// A delivery that exceeds one frame is split into consecutive chunks.
+	// Chunk frames carry only these two fields. Concatenate chunk_data in
+	// stream order and decode it as QueueMessage after more_chunks is false.
+	ChunkData     []byte `protobuf:"bytes,8,opt,name=chunk_data,json=chunkData,proto3" json:"chunk_data,omitempty"`
+	MoreChunks    bool   `protobuf:"varint,9,opt,name=more_chunks,json=moreChunks,proto3" json:"more_chunks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -333,6 +339,34 @@ func (x *QueueMessage) GetDelayMs() int64 {
 		return x.DelayMs
 	}
 	return 0
+}
+
+func (x *QueueMessage) GetMaxRetries() uint32 {
+	if x != nil && x.MaxRetries != nil {
+		return *x.MaxRetries
+	}
+	return 0
+}
+
+func (x *QueueMessage) GetAttempt() uint64 {
+	if x != nil {
+		return x.Attempt
+	}
+	return 0
+}
+
+func (x *QueueMessage) GetChunkData() []byte {
+	if x != nil {
+		return x.ChunkData
+	}
+	return nil
+}
+
+func (x *QueueMessage) GetMoreChunks() bool {
+	if x != nil {
+		return x.MoreChunks
+	}
+	return false
 }
 
 // A durable interest, independent of any network connection. Exactly one of
@@ -519,13 +553,21 @@ const file_consumer_proto_rawDesc = "" +
 	"\rConsumerFrame\x12,\n" +
 	"\x04init\x18\x01 \x01(\v2\x16.futureq.SubscribeInitH\x00R\x04init\x12'\n" +
 	"\x03ack\x18\x02 \x01(\v2\x13.futureq.AckRequestH\x00R\x03ackB\x06\n" +
-	"\x04body\"\xab\x01\n" +
+	"\x04body\"\xbb\x02\n" +
 	"\fQueueMessage\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
 	"\apayload\x18\x02 \x01(\fR\apayload\x12!\n" +
 	"\fdelivery_tag\x18\x03 \x01(\fR\vdeliveryTag\x12-\n" +
 	"\x13enqueued_at_unix_ms\x18\x04 \x01(\x03R\x10enqueuedAtUnixMs\x12\x19\n" +
-	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs\"k\n" +
+	"\bdelay_ms\x18\x05 \x01(\x03R\adelayMs\x12$\n" +
+	"\vmax_retries\x18\x06 \x01(\rH\x00R\n" +
+	"maxRetries\x88\x01\x01\x12\x18\n" +
+	"\aattempt\x18\a \x01(\x04R\aattempt\x12\x1d\n" +
+	"\n" +
+	"chunk_data\x18\b \x01(\fR\tchunkData\x12\x1f\n" +
+	"\vmore_chunks\x18\t \x01(\bR\n" +
+	"moreChunksB\x0e\n" +
+	"\f_max_retries\"k\n" +
 	"\x13SubscriptionRequest\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12#\n" +
@@ -590,6 +632,7 @@ func file_consumer_proto_init() {
 		(*ConsumerFrame_Init)(nil),
 		(*ConsumerFrame_Ack)(nil),
 	}
+	file_consumer_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

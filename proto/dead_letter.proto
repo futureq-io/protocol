@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package futureq;
+
+option go_package = "github.com/futureq-io/protocol/proto/go";
+
+import "producer.proto";
+
+enum DeadLetterReason {
+    DEAD_LETTER_REASON_UNSPECIFIED = 0;
+    DEAD_LETTER_REASON_NACK = 1;
+    DEAD_LETTER_REASON_TIMEOUT = 2;
+}
+
+message DeadLetterSummary {
+    // Opaque within the topic. Use it to retrieve or delete this record.
+    bytes id = 1;
+    string topic = 2;
+    // The durable subscription generation associated with the failed delivery.
+    string generation = 3;
+    string group_id = 4;
+    string subscriber_id = 5;
+    uint64 attempts = 6;
+    DeadLetterReason reason = 7;
+    int64 dead_lettered_at_unix_ms = 8;
+    int64 enqueued_at_unix_ms = 9;
+    // The list response omitted the group or subscriber ID to fit the frame.
+    // GetDeadLetter returns the full summary using this entry's ID.
+    bool identity_omitted = 10;
+}
+
+message DeadLetter {
+    DeadLetterSummary summary = 1;
+    // Original publish fields, including the payload and indexes.
+    PublishMessage message = 2;
+}
+
+message ListDeadLettersRequest {
+    string topic = 1;
+    uint32 page_size = 2;
+    bytes page_token = 3;
+}
+
+message ListDeadLettersResponse {
+    repeated DeadLetterSummary entries = 1;
+    bytes next_page_token = 2;
+}
+
+message DeadLetterRequest {
+    string topic = 1;
+    bytes id = 2;
+}
+
+// Concatenate data from all chunks in stream order and decode it as DeadLetter.
+message DeadLetterChunk {
+    bytes data = 1;
+}
+
+message DeleteDeadLetterResponse {}
+
+service FutureQDeadLetter {
+    rpc ListDeadLetters(ListDeadLettersRequest) returns (ListDeadLettersResponse);
+    rpc GetDeadLetter(DeadLetterRequest) returns (stream DeadLetterChunk);
+    // Idempotently removes a retained record.
+    rpc DeleteDeadLetter(DeadLetterRequest) returns (DeleteDeadLetterResponse);
+}
